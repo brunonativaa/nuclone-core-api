@@ -1,0 +1,64 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table cliente { 
+  id_cliente integer [primary key, increment] // Alinhado com o padrão de id_ das outras tabelas
+  nome varchar(100) [not null]
+  cpf varchar(15) [unique, not null]
+  sexo char(1)   
+  email varchar(100) [unique, not null]   
+  senha varchar(16) [not null]
+  data_nascimento date [not null]
+  Note: 'Regra de negócio: verificar idade >= 18 na aplicação'
+}
+
+Table telefone {
+  id_telefone integer [primary key, increment]
+  id_cliente integer [not null]
+  numero varchar(15) [not null]
+  tipo varchar(10) [note: 'Fixo ou Celular'] // Trocado enum por varchar estruturado para evitar erros de compilação genéricos
+}
+
+Table endereco {
+  id_endereco integer [primary key, increment]
+  id_cliente integer [not null]
+  estado char(2) [not null]
+  cidade varchar(100) [not null]
+  bairro varchar(100) [not null]
+  rua varchar(100) [not null]
+  cep varchar(8) [not null]
+  num varchar(10) [not null]
+}
+
+Table conta {
+  id_conta integer [primary key, increment] 
+  id_cliente integer [not null]
+  num_conta varchar(20) [unique, not null]  
+  tipo_conta varchar(20) [note: 'PF ou PJ']  
+  agencia varchar(10) [not null]
+}
+
+Table saldo_conta {
+  id_saldo_conta integer [primary key, increment]
+  id_conta integer [not null, unique]
+  saldo_disponivel decimal(15,2) [not null, default: 0.00]
+  saldo_bloqueado decimal(15,2) [not null, default: 0.00]
+  ultima_atualizacao timestamp [default: `now()`]
+}
+
+Table transacao {
+  transacao_id integer [primary key, increment]
+  id_conta_origem integer [not null]
+  id_conta_destino integer [not null]
+  tipo_transacao varchar(10) [note: 'Pix ou Ted']
+  valor decimal(15,2) [not null, note: 'Regra de negócio: deve ser saldo_positivo > 0']
+  data_hora timestamp [default: `now()`]
+}
+
+// Relacionamentos (Cardinalidades corretas)
+Ref: "telefone"."id_cliente" > "cliente"."id_cliente"
+Ref: "endereco"."id_cliente" > "cliente"."id_cliente"
+Ref: "conta"."id_cliente" > "cliente"."id_cliente"
+Ref: "saldo_conta"."id_conta" - "conta"."id_conta" // Relação 1-para-1 ideal
+Ref: "transacao"."id_conta_origem" > "conta"."id_conta" // Uma conta pode ter várias transações de origem
+Ref: "transacao"."id_conta_destino" > "conta"."id_conta" // Uma conta pode ter várias transações de destino

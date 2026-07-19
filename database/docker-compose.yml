@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15
+    container_name: nuclone-postgres
+    env_file:
+      - .env
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: core_banking
+    ports:
+      - "5432:5432"
+    volumes:
+      - nuclone_pgdata:/var/lib/postgresql/data
+      - ./src/sql:/docker-entrypoint-initdb.d
+
+volumes:
+  nuclone_pgdata:
+
