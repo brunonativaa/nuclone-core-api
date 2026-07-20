@@ -1,15 +1,18 @@
 [project]
-name = "nuclone-api"
+name = "projeto-nuclone"
 version = "0.1.0"
 description = ""
 authors = [
     {name = "Bruno",email = "brunoferreirarodrigues26@outlook.com"}
 ]
+packages = [
+    { include = "src" }
+]
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi (>=0.139.2,<0.140.0)",
-    "uvicorn (>=0.51.0,<0.52.0)",
-    "unicorn (>=2.1.4,<3.0.0)"
+    "psycopg2-binary (>=2.9.12,<3.0.0)",
+    "pydantic (>=2.13.4,<3.0.0)"
 ]
 
 

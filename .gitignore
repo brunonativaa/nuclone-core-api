@@ -1,1 +1,56 @@
-__pycache__/\n*.pyc\n.venv/\n.poetry/
+# ============================
+#  AMBIENTE PYTHON / POETRY
+# ============================
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Poetry
+poetry.lock
+# (Opcional: se quiser versionar o lock, remova esta linha)
+
+# ============================
+#  FASTAPI / UVICORN
+# ============================
+*.log
+
+# ============================
+#  EDITOR / IDE
+# ============================
+.vscode/
+.idea/
+
+# ============================
+#  SISTEMA OPERACIONAL
+# ============================
+.DS_Store
+Thumbs.db
+
+# ============================
+#  DOCKER
+# ============================
+# Arquivos gerados por containers
+*.pid
+*.seed
+*.bak
+
+# ============================
+#  BANCO DE DADOS
+# ============================
+*.db
+*.sqlite3
+*.sql-journal
+
+# ============================
+#  BUILD / DIST
+# ============================
+dist/
+build/
+
+# =============================
+# Variaveis de ambiente
+# =============================
+
+.env
