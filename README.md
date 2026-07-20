@@ -1,7 +1,7 @@
 ## 📐 Modelagem do NuClone
 
 <i>Imagem do diagrama:</i>
-![Diagrama NuClone](./docs/Nuclone.png)
+![Diagrama NuClone](./database/docs/Nuclone.png)
 
 ### 📐 Decisões de Arquitetura e Modelagem (NuClone)
 
