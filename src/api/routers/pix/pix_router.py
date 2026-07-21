@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src.api.schemas.pix_schema import PixRequestInput
+from src.api.schemas.modules.pix.pix_schema import PixRequestInput
 
 router = APIRouter()
 

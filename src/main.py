@@ -1,6 +1,7 @@
 from fastapi import FastAPI
-from src.api.routers.cliente_router import router as cliente_router
-from src.api.routers.pix_router import router as pix_router
+from src.api.routers.cliente.cliente_router import router as cliente_router
+from src.api.routers.pix.pix_router import router as pix_router
+
 
 app = FastAPI()
 

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src.api.schemas.cliente_schema import ClienteCreateInput
+from src.api.schemas.modules.cliente.cliente_schema import ClienteCreateInput
 
 router = APIRouter()
 
