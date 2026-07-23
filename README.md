@@ -12,3 +12,8 @@
 
 
 <i>"Evolução Arquitetural: Este projeto foi desmembrado de um repositório monolítico de estudos para um ecossistema de microsserviço dedicado, visando independência de deploy, isolamento de escopo e facilidade de manutenção seguindo boas práticas de Engenharia de Software."</i>
+
+
+🏛️ Arquitetura da Aplicação
+
+Arquitetura Modular (Package by Feature): O projeto adota o padrão de Monólito Modular organizando o código-fonte por domínios de negócio (modules/cliente, modules/pix, etc.). Essa abordagem reduz a carga cognitiva durante a manutenção, garante forte isolamento entre contextos e facilita a transição futura para uma arquitetura de microsserviços, caso haja necessidade de escala.
