@@ -4,7 +4,7 @@
 Table cliente { 
   id_cliente integer [primary key, increment] // Alinhado com o padrão de id_ das outras tabelas
   nome varchar(100) [not null]
-  cpf varchar(15) [unique, not null]
+  cpf varchar(11) [unique, not null]
   sexo char(1)   
   email varchar(100) [unique, not null]   
   senha varchar(16) [not null]
