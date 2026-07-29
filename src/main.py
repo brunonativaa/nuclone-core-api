@@ -1,7 +1,8 @@
 from fastapi import FastAPI
+from src.core.database import Base, engine
 from src.api.routers.cliente_router import router as cliente_router
 from src.api.routers.pix_router import router as pix_router
-from src.core.database import Base, engine
+
 
 Base.metadata.create_all(bind=engine)
 

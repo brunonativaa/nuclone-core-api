@@ -3,7 +3,9 @@ from src.core.database import Base
 
 
 class EnderecoModel(Base):
-    id_endereco = Column(Integer, primaryKey=True)
+    __tablename__ = 'endereco'
+
+    id_endereco = Column(Integer, primary_key=True, index=True)
     id_cliente = Column(Integer, ForeignKey(
         "cliente.id_cliente"), nullable=False)
     estado = Column(String(2), nullable=False)
