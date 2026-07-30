@@ -1,4 +1,4 @@
-from sqlalchamey.orm import Session
+from sqlalchemy.orm import Session
 from src.models.transacao_model import TransacaoModel
 from src.models.saldo_conta_model import SaldoContaModel
 
@@ -16,6 +16,20 @@ class PixRepository:
         return transacao
 
     def atualizar_saldo(self, id_conta, valor):
+        saldo = self.db.query(SaldoContaModel).filter_by(
+            id_conta=id_conta).first()
+        saldo.saldo_disponivel += valor
+        self.db.commit()
+        return saldo
+
+    def debitar(self, id_conta, valor):
+        saldo = self.db.query(SaldoContaModel).filter_by(
+            id_conta=id_conta).first()
+        saldo.saldo_disponivel -= valor
+        self.db.commit()
+        return saldo
+
+    def creditar(self, id_conta, valor):
         saldo = self.db.query(SaldoContaModel).filter_by(
             id_conta=id_conta).first()
         saldo.saldo_disponivel += valor

@@ -20,6 +20,9 @@ class ContaRepository:
         self.db.refresh(conta)
         return conta
 
+    def create(self, data):
+        return self.criar_conta(data)
+
     def buscar_conta(self, id_conta):
         return self.db.query(ContaModel).filter_by(id_conta=id_conta).first()
 
