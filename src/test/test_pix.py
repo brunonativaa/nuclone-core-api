@@ -1,55 +1,68 @@
+import uuid
+from decimal import Decimal
+from datetime import date
+from src.core.database import SessionLocal
+from src.repositories.cliente_repository import ClienteRepository
+from src.repositories.conta_repository import ContaRepository
+from src.repositories.pix_repository import PixRepository
+
+
 def test_fluxo_pix():
-
-    from datetime import date
-    from src.core.database import SessionLocal
-    from src.repositories.cliente_repository import ClienteRepository
-    from src.repositories.conta_repository import ContaRepository
-    from src.repositories.pix_repository import PixRepository
-
     db = SessionLocal()
 
     cliente_repo = ClienteRepository(db)
     conta_repo = ContaRepository(db)
     pix_repo = PixRepository(db)
 
+    # Gera sufixo único para evitar erros de UniqueViolation no banco
+    sufixo_unico = str(uuid.uuid4().int)[:5]
+
+    # 1. Cria cliente
     cliente = cliente_repo.create({
-        "nome": "Hi-man",
-        "cpf": "12356985999",
-        "sexo": "M",
-        "email": "himan_unico@apple.com",
+        "nome": "Shi-Ha",
+        "cpf": f"123569{sufixo_unico}",
+        "sexo": "F",
+        "email": f"Shiha_{sufixo_unico}@apple.com",
         "senha": "1565584",
         "data_nascimento": date(1998, 1, 10)
     })
-    conta = conta_repo.create({
+
+    # 2. Cria conta de origem e inicializa saldo
+    conta_origem = conta_repo.create({
         "id_cliente": cliente.id_cliente,
-        "num_conta": "12225-6",
+        "num_conta": f"{sufixo_unico}-1",
         "tipo_conta": "PF",
         "agencia": "0001"
     })
-    conta_repo.criar_saldo(conta.id_conta)
+    conta_repo.criar_saldo(conta_origem.id_conta)
 
-    # Conta destino
+    # 3. Cria conta de destino e inicializa saldo
     conta_destino = conta_repo.create({
         "id_cliente": cliente.id_cliente,
-        "num_conta": "98765-0",
+        "num_conta": f"{sufixo_unico}-2",
         "tipo_conta": "PF",
         "agencia": "0001"
     })
     conta_repo.criar_saldo(conta_destino.id_conta)
 
-    # PIX
-    pix_repo.debitar(conta.id_conta, 50)
-    pix_repo.creditar(conta_destino.id_conta, 50)
+    # 4. Adiciona saldo na conta de origem (ex: R$ 100,00)
+    pix_repo.atualizar_saldo(conta_origem.id_conta, 100.0)
 
-    transacao = pix_repo.registrar_transacao({
-        "id_conta_origem": conta.id_conta,
+    # 5. Executa a transferência PIX de R$ 50,00
+    dados_transacao = {
+        "id_conta_origem": conta_origem.id_conta,
         "id_conta_destino": conta_destino.id_conta,
-        "valor": 50,
-        "tipo": "PIX"
-    })
+        "valor": Decimal("50.0"),
+        "tipo_transacao": "PIX"  # Ajuste os campos conforme o seu TransacaoModel
+    }
 
-    print("Transação criada:", transacao.id_transacao)
-    print("Saldo origem:", conta_repo.get_saldo(
-        conta.id_conta).saldo_disponivel)
-    print("Saldo destino:", conta_repo.get_saldo(
-        conta_destino.id_conta).saldo_disponivel)
+    transacao = pix_repo.transferir_pix(
+        id_conta_origem=conta_origem.id_conta,
+        id_conta_destino=conta_destino.id_conta,
+        valor=Decimal("50.0"),
+        dados_transacao=dados_transacao
+    )
+
+    # 6. Asserts para validar se deu tudo certo
+    assert transacao is not None
+    assert transacao.id_transacao is not None

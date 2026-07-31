@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, Numeric, DateTime, String, ForeignKey
+from datetime import datetime
+from sqlalchemy import Column, Integer, Numeric, DateTime, String, ForeignKey, func
 from src.core.database import Base
 
 
@@ -12,4 +13,4 @@ class TransacaoModel(Base):
         "conta.id_conta"), nullable=False)
     tipo_transacao = Column(String, nullable=False, default="PIX")
     valor = Column(Numeric(15, 2), nullable=False)
-    data_hora = Column(DateTime)
+    ultima_atualizacao = Column(DateTime, server_default=func.now())

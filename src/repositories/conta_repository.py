@@ -20,6 +20,9 @@ class ContaRepository:
         self.db.refresh(conta)
         return conta
 
+    def get_saldo(self, id_conta):
+        return self.db.query(SaldoContaModel).filter_by(id_conta=id_conta).first()
+
     def create(self, data):
         return self.criar_conta(data)
 
