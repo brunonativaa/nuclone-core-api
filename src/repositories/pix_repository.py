@@ -9,15 +9,22 @@ class PixRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def atualizar_saldo(self, id_conta, valor):
+    def update_saldo(self, id_conta, valor):
         saldo = self.db.query(SaldoContaModel).filter_by(
             id_conta=id_conta).first()
         saldo.saldo_disponivel += Decimal(str(valor))
         self.db.commit()
         return saldo
 
+    def debitar(self, id_conta, valor):
+        # Passa o valor negativo para subtrair
+        return self.update_saldo(id_conta, -Decimal(str(valor)))
 
-    def registrar_transacao(self, data: dict):
+    def creditar(self, id_conta, valor):
+        # Passa o valor positivo para somar
+        return self.update_saldo(id_conta, Decimal(str(valor)))
+
+    def record_transaction(self, data: dict):
         transacao = TransacaoModel(**data)
         self.db.add(transacao)
         self.db.commit()

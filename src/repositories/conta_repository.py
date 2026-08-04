@@ -8,7 +8,7 @@ class ContaRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def criar_conta(self, data):
+    def create_account(self, data):
         conta = ContaModel(
             id_cliente=data["id_cliente"],
             num_conta=data["num_conta"],     # ✔ nome correto
@@ -26,10 +26,10 @@ class ContaRepository:
     def create(self, data):
         return self.criar_conta(data)
 
-    def buscar_conta(self, id_conta):
+    def search_account(self, id_conta):
         return self.db.query(ContaModel).filter_by(id_conta=id_conta).first()
 
-    def criar_saldo(self, id_conta):
+    def create_saldo(self, id_conta):
         saldo = SaldoContaModel(id_conta=id_conta, saldo_disponivel=0)
         self.db.add(saldo)
         self.db.commit()
