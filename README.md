@@ -16,4 +16,4 @@
 
 🏛️ Arquitetura da Aplicação
 
-Arquitetura Modular (Package by Feature): O projeto adota o padrão de Monólito Modular organizando o código-fonte por domínios de negócio (modules/cliente, modules/pix, etc.). Essa abordagem reduz a carga cognitiva durante a manutenção, garante forte isolamento entre contextos e facilita a transição futura para uma arquitetura de microsserviços, caso haja necessidade de escala.
+Arquitetura Modular (Package by Feature): O projeto adota o padrão de Monólito Modular organizando o código-fonte por domínios de negócio (modules/cliente, modules/pix, etc.). Essa abordagem reduz a carga cognitiva durante a manutenção, garante forte isolamento entre contextos e facilita a transição futura para uma arquitetura de microsserviços, caso haja necessidade de escala... 
