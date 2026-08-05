@@ -2,7 +2,7 @@ from pydantic import BaseModel, field_validator
 from decimal import Decimal
 
 
-class PixRequestInput(BaseModel):
+class PixTransferInput(BaseModel):
     id_conta_origem: int
     id_conta_destino: int
     valor: Decimal
@@ -13,3 +13,9 @@ class PixRequestInput(BaseModel):
             raise ValueError(
                 "Valor da transação Pix deve ser maior que R$0,00")
         return round(value, 2)
+
+
+class PixTransferOutput(BaseModel):
+    message: str
+    id_transacao: int
+    valor: Decimal

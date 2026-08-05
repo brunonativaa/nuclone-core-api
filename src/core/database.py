@@ -21,12 +21,12 @@ SessionLocal = sessionmaker(
     future=True
 )
 
-from src.models.cliente_model import ClienteModel
-from src.models.conta_model import ContaModel
-from src.models.saldo_conta_model import SaldoContaModel
-from src.models.transacao_model import TransacaoModel
-from src.models.endereco_model import EnderecoModel
-from src.models.telefone_model import TelefoneModel
+from src.models.customer_model import ClienteModel
+from src.models.account_model import ContaModel
+from src.models.balance_account_model import SaldoContaModel
+from src.models.transaction_model import TransacaoModel
+from src.models.address_model import EnderecoModel
+from src.models.telephone_model import TelefoneModel
 
 Base.metadata.create_all(bind=engine)
 

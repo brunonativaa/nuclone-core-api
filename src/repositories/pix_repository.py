@@ -1,7 +1,7 @@
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from src.models.transacao_model import TransacaoModel
-from src.models.saldo_conta_model import SaldoContaModel
+from src.models.transaction_model import TransacaoModel
+from src.models.balance_account_model import SaldoContaModel
 
 
 class PixRepository:

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from src.models.conta_model import ContaModel
-from src.models.saldo_conta_model import SaldoContaModel
+from src.models.account_model import ContaModel
+from src.models.balance_account_model import SaldoContaModel
 
 
 class ContaRepository:

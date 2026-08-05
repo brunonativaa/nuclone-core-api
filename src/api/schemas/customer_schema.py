@@ -10,6 +10,8 @@ class ClienteCreateInput(BaseModel):
     email: EmailStr = Field(..., description="E-mail válido do cliente")
     senha: str = Field(..., min_length=8,
                        description="Senha de usuario (mínimo 8 caracteres)")
+    sexo: str = Field(..., min_length=1, max_length=1)
+    data_nascimento: str
 
     @field_validator("cpf")
     @classmethod
@@ -18,3 +20,13 @@ class ClienteCreateInput(BaseModel):
         if len(cpf_limpo) != 11:
             raise ValueError("CPF deve conter exatamente 11 dígitos ")
         return cpf_limpo
+
+
+class ClienteOutput(BaseModel):
+    id_cliente: int
+    nome: str
+    cpf: str
+    email: EmailStr
+
+    class Config:
+        from_attributes = True

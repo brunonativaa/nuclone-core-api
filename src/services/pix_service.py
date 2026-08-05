@@ -1,6 +1,6 @@
 from decimal import Decimal
-from src.models.transacao_model import TipoTransacaoEnum
-from src.repositories.conta_repository import ContaRepository
+from src.models.transaction_model import TipoTransacaoEnum
+from src.repositories.account_repository import ContaRepository
 from src.repositories.pix_repository import PixRepository
 
 

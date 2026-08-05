@@ -1,10 +1,8 @@
-
-
 import random
 from decimal import Decimal
 import pytest
-from src.services.cliente_service import ClienteService
-from src.services.conta_service import ContaService
+from src.services.customer_service import ClienteService
+from src.services.account_service import ContaService
 from src.services.pix_service import (
     PixService,
     SaldoInsuficienteException,
