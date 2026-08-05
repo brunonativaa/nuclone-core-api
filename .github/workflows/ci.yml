@@ -20,9 +20,9 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: postgres_test_user
-          POSTGRES_PASSWORD: test_password_12345
-          POSTGRES_DB: nuclone_test_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: nuclone_db
         ports:
           - 5432:5432
         options: >-
@@ -32,21 +32,26 @@ jobs:
           --health-retries 5
 
     steps:
+      # 1.  Baixa o código do repositório (para o poetry.lock existir)
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2.  Instala o Poetry no ambiente
       - name: Install poetry
         run: pipx install poetry
 
+      # 3.  Configura o Python + Cache do Poetry
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: "poetry"
 
+      # 4.  Instala as dependências do projeto
       - name: Install dependencies
         run: poetry install --no-interaction
 
+      # 5.  Executa a suíte de testes
       - name: Run Pytest
         env:
           DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/nuclone_db"
