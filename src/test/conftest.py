@@ -26,7 +26,7 @@ def valid_customer_data():
     random_cpf = f"999{random_number:06d}00"
 
     return {
-        "nome": f"Bruno Pytest{random_number}",
+        "nome": f"Bruno Typer2026",
         "cpf": random_cpf,
         "email": f"pytest_{random_number}@email.com",
         "senha": "senha_segura_test",
