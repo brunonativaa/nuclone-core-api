@@ -23,11 +23,11 @@ def db_session():
 def valid_customer_data():
 
     random_number = random.randint(10000, 99999)
-    random_cpf = f"999{random_number:06d}00"
+    
 
     return {
-        "nome": f"Bruno Typer2026",
-        "cpf": random_cpf,
+        "nome": f"Bruno Typer2@26",
+        "cpf": "99988877701",
         "email": f"pytest_{random_number}@email.com",
         "senha": "senha_segura_test",
         "sexo": "M",

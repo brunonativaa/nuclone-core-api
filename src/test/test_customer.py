@@ -13,8 +13,8 @@ def test_create_customer_success(db_session, valid_customer_data):
     customer = service.create_customer(valid_customer_data)
 
     assert customer.id_cliente is not None
-    assert customer.nome == f"Bruno Typer2026"
-    assert customer.cpf == "99988877700"  # valida a limpeza de formatação cpf
+    assert customer.nome == "Bruno Typer2@26"
+    assert customer.cpf == "99988877701"  # valida a limpeza de formatação cpf
 
 
 def test_create_customer_duplicate_cpf_should_fail(db_session, valid_customer_data):
