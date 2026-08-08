@@ -25,7 +25,11 @@ def create_account(payload: AccountCreateInput, db: Session = Depends(get_db)):
     except ClienteNaoEncontradoException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
+            detail={
+                "code": "CLIENT_NOT_FOUND",
+                "message": str(e),
+                "id_cliente": payload.id_cliente,
+            },
         )
 
 
@@ -38,5 +42,9 @@ def get_account_balance(id_conta: int, db: Session = Depends(get_db)):
     except ContaNaoEncontradaException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
+            detail={
+                "error": "Conta Não Encontrada",
+                "message": f"O id da conta {id_conta} não foi encontrado",
+                "account_id": id_conta
+            },
         )
