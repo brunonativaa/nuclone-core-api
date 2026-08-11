@@ -30,7 +30,7 @@ def valid_customer_data():
 
     return {
         "nome": "Bruno Typer2@26",
-        "cpf": f"{random_number}877701",
+        "cpf": f"99988877701",
         "email": f"pytest_{random_number}@email.com",
         "senha": "senha_segura_test",
         "sexo": "M",
