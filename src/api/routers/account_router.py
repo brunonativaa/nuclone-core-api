@@ -32,6 +32,25 @@ def create_account(payload: AccountCreateInput, db: Session = Depends(get_db)):
             },
         )
 
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "INVALID_ACCOUNT_DATA",
+                "message": str(e),
+                "field": "num_conta"
+            }
+        )
+
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "code": "INTERNAL_ERROR",
+                "message": "Ocorreu um erro inesperado ao criar a conta. Tente novamente."
+            }
+        )
+
 
 @router.get("/{id_conta}/balance", status_code=status.HTTP_200_OK, response_model=AccountBalanceOutput)
 def get_account_balance(id_conta: int, db: Session = Depends(get_db)):
