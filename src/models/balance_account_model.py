@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, Numeric, DateTime, ForeignKey
 from src.core.database import Base
 
@@ -10,4 +11,9 @@ class SaldoContaModel(Base):
                       unique=True, nullable=False)
     saldo_disponivel = Column(Numeric(15, 2), nullable=False)
     saldo_bloqueado = Column(Numeric(15, 2), nullable=False, default=0.00)
-    ultima_atualizacao = Column(DateTime)
+    ultima_atualizacao = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )

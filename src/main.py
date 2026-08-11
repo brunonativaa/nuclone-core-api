@@ -1,19 +1,19 @@
 from fastapi import FastAPI
-from src.core.database import Base, engine
-from src.api.routers.cliente_router import router as cliente_router
+from src.api.routers.customer_router import router as cliente_router
+from src.api.routers.account_router import router as account_router
 from src.api.routers.pix_router import router as pix_router
 
 
-Base.metadata.create_all(bind=engine)
+app = FastAPI(title="Nuclone Core API",
+              description="API de serviços financeiros e transferências bancárias",
+              version="1.0.0")
 
 
-app = FastAPI(title="Nuclone API", version="1.0.0")
+app.include_router(cliente_router)
+app.include_router(account_router)
+app.include_router(pix_router)
 
 
-@app.get("/")
-def home():
-    return {"menssage": "API Nuclone operando com sucesso!"}
-
-
-app.include_router(cliente_router, prefix="/cliente")
-app.include_router(pix_router, prefix="/pix")
+@app.get('/', tags=["Health Check"])
+def health_check():
+    return {"status": "Ok", "menssage": "Nuclone API is running!"}

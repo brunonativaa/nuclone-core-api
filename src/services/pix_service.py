@@ -1,6 +1,6 @@
 from decimal import Decimal
-from src.models.transacao_model import TipoTransacaoEnum
-from src.repositories.conta_repository import ContaRepository
+from src.models.transaction_model import TipoTransacaoEnum
+from src.repositories.account_repository import ContaRepository
 from src.repositories.pix_repository import PixRepository
 
 
@@ -46,19 +46,21 @@ class PixService:
 
         try:
 
-            self.pix_repo.debitar(id_conta_origem, valor_decimal)
+            self.pix_repo.debit(id_conta_origem, valor_decimal)
 
-            self.pix_repo.creditar(id_conta_destino, valor_decimal)
+            self.pix_repo.credit(id_conta_destino, valor_decimal)
 
             dados_transacao = self.pix_repo.record_transaction({
                 "id_conta_origem": id_conta_origem,
                 "id_conta_destino": id_conta_destino,
                 "tipo_transacao": TipoTransacaoEnum.PIX,
-                "valor": valor_decimal,
+                "valor": valor_decimal
+
 
 
             })
 
+            self.db.flush()
             self.db.commit()
             return dados_transacao
 
@@ -66,3 +68,24 @@ class PixService:
 
             self.db.rollback()
             raise e
+
+    def adding_balance(self, id_conta: int, valor):
+        valor_decimal = Decimal(str(valor))
+
+        if valor_decimal <= 0:
+            raise ValueError("O valor adicionado deve ser maior que zero.")
+
+        conta = self.conta_repo.search_account(id_conta)
+        if not conta:
+            raise ContaNaoEncontradaException("Conta não encontrada.")
+
+        try:
+
+            saldo_atualizado = self.pix_repo.credit(id_conta, valor_decimal)
+
+            self.db.commit()
+            return saldo_atualizado
+
+        except Exception as e:
+            self.db.rollback()
+            return e

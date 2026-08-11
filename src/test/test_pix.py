@@ -1,10 +1,8 @@
-
-
 import random
 from decimal import Decimal
 import pytest
-from src.services.cliente_service import ClienteService
-from src.services.conta_service import ContaService
+from src.services.customer_service import ClienteService
+from src.services.account_service import ContaService
 from src.services.pix_service import (
     PixService,
     SaldoInsuficienteException,
@@ -33,8 +31,8 @@ def setup_two_accounts_with_balance(db_session, valid_customer_data):
 
     random_id = random.randint(100000, 999999)
     customer2_data = {
-        "nome": f"Receiver {random_id}",
-        "cpf": f"111{random_id:06d}44",  # Exatamente 11 dígitos
+        "nome": f"Bruno Typer2026",
+        "cpf": f"999.888.777-00",  # Exatamente 11 dígitos
         "email": f"receiver_{random_id}@email.com",
         "senha": "secure_password_test",
         "sexo": "F",
