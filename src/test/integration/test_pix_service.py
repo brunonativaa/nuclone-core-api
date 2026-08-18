@@ -22,6 +22,9 @@ def test_adding_balance_to_account(db_session, id_conta_origem):
 def test_successfully_complete_a_pix_transfer(db_session, id_conta_origem, id_conta_destino):
     service = PixService(db_session)
 
+    saldo_inicial_origem = service.conta_repo.get_saldo(
+        id_conta_origem).saldo_disponivel
+
     service.adding_balance(id_conta_origem, 250.00)
 
     transacao = service.realizar_pix(
@@ -34,12 +37,15 @@ def test_successfully_complete_a_pix_transfer(db_session, id_conta_origem, id_co
     saldo_destino = service.conta_repo.get_saldo(
         id_conta_destino).saldo_disponivel
 
-    assert saldo_origem == Decimal("200.00")
+    assert saldo_origem == saldo_inicial_origem + Decimal("200.00")
     assert saldo_destino == Decimal("50.00")
 
 
 def test_pix_insufficient_funds(db_session, id_conta_origem, id_conta_destino):
     service = PixService(db_session)
+
+    saldo_inicial_origem = service.conta_repo.get_saldo(
+        id_conta_origem).saldo_disponivel
 
     with pytest.raises(SaldoInsuficienteException):
         service.realizar_pix(id_conta_origem, id_conta_destino, 1000.00)
@@ -49,5 +55,5 @@ def test_pix_insufficient_funds(db_session, id_conta_origem, id_conta_destino):
     saldo_destino = service.conta_repo.get_saldo(
         id_conta_destino).saldo_disponivel
 
-    assert saldo_origem == Decimal("0.00")
+    assert saldo_origem == saldo_inicial_origem
     assert saldo_destino == Decimal("0.00")

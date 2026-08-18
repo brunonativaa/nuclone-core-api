@@ -7,7 +7,7 @@ from src.services.pix_service import (
 
 from src.api.schemas.pix_schema import PixTransferInput, PixTransferOutput
 
-router = APIRouter(prefix="/pix", tags=["Pix Transactions"])
+router = APIRouter(prefix="/pix/v1", tags=["Pix Transactions"])
 
 
 @router.post("/transferir", status_code=status.HTTP_200_OK, response_model=PixTransferOutput)
