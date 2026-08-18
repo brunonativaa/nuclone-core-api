@@ -17,7 +17,8 @@ dependencies = [
     "fastapi (>=0.139.2,<0.140.0)",
     "sqlalchemy (>=2.0.51,<3.0.0)",
     "dotenv (>=0.9.9,<0.10.0)",
-    "pytest (>=9.1.1,<10.0.0)"
+    "pytest (>=9.1.1,<10.0.0)",
+    "httpx2 (>=2.12.0,<3.0.0)"
 ]
 
 
@@ -27,5 +28,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 markers = [
-    "unit: Testes unitários do sistema."
+    "unit: Testes unitários do sistema.",
+    "e2e: testes de ponta a ponta"
+]
+
+[dependency-groups]
+dev = [
+    "httpx2 (>=2.12.0,<3.0.0)"
 ]
