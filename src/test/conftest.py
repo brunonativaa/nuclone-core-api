@@ -60,7 +60,7 @@ def id_conta_origem(db_session, valid_customer_data):
     # 3. Cria o Saldo zerado vinculado à conta (usando conta.id_conta)
     saldo = SaldoContaModel(
         id_conta=conta.id_conta,
-        saldo_disponivel=0,
+        saldo_disponivel=100.00,
         saldo_bloqueado=0,
         ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
     )
