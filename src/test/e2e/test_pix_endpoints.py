@@ -11,7 +11,7 @@ def test_endpoint_realizar_pix_sem_autenticacao():
     response = cliente.post("/pix/v1/transferir", json={
         "id_conta_origem": 1,
         "id_conta_destino": 2,
-        "valor": 0.00
+        "valor": 100.00
     })
 
     assert response.status_code == 200
