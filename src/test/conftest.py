@@ -1,3 +1,4 @@
+import datetime
 import random
 import pytest
 from sqlalchemy.orm import sessionmaker
@@ -57,7 +58,12 @@ def id_conta_origem(db_session, valid_customer_data):
     db_session.flush()
 
     # 3. Cria o Saldo zerado vinculado à conta (usando conta.id_conta)
-    saldo = SaldoContaModel(id_conta=conta.id_conta, saldo_disponivel=0)
+    saldo = SaldoContaModel(
+        id_conta=conta.id_conta,
+        saldo_disponivel=0,
+        saldo_bloqueado=0,
+        ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
+    )
     db_session.add(saldo)
     db_session.flush()
 
@@ -91,7 +97,12 @@ def id_conta_destino(db_session):
     db_session.flush()
 
     # 3. Cria o Saldo zerado
-    saldo = SaldoContaModel(id_conta=conta.id_conta, saldo_disponivel=0)
+    saldo = SaldoContaModel(
+        id_conta=conta.id_conta,
+        saldo_disponivel=0,
+        saldo_bloqueado=0,
+        ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
+    )
     db_session.add(saldo)
     db_session.flush()
 
