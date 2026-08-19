@@ -9,8 +9,8 @@ app = FastAPI(title="Nuclone Core API",
               version="1.0.0")
 
 
-app.include_router(cliente_router)
-app.include_router(account_router)
+app.include_router(cliente_router, prefix="/api/v1/customer")
+app.include_router(account_router, prefix="/api/v1/accounts")
 app.include_router(pix_router)
 
 

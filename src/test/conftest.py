@@ -1,11 +1,13 @@
 import datetime
 import random
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
-from src.core.database import Base, engine, SessionLocal
+
+from src.main import app
+from src.core.database import Base, engine, SessionLocal, get_db
 from src.models.account_model import ContaModel
 from src.models.balance_account_model import SaldoContaModel
-# Importe a sua model de Cliente (ajuste o caminho de import se for diferente)
 from src.models.customer_model import ClienteModel
 
 
@@ -23,6 +25,21 @@ def db_session():
     session.close()
     transaction.rollback()
     connection.close()
+
+
+@pytest.fixture
+def client(db_session):
+
+    def _override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = _override_get_db
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -65,7 +82,7 @@ def id_conta_origem(db_session, valid_customer_data):
         ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
     )
     db_session.add(saldo)
-    db_session.flush()
+    db_session.commit()
 
     return conta.id_conta
 

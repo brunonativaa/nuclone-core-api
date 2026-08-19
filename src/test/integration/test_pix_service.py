@@ -3,8 +3,54 @@ from decimal import Decimal
 from src.models.account_model import ContaModel
 from src.services.pix_service import (
     PixService,
-    SaldoInsuficienteException
+    SaldoInsuficienteException,
+    ContaNaoEncontradaException
 )
+
+
+def test_perform_pix_nonexistent_source_account(db_session, id_conta_destino):
+    service = PixService(db_session)
+    with pytest.raises(ContaNaoEncontradaException, match="Conta de origem não encontrada."):
+        service.realizar_pix(999999, id_conta_destino, Decimal("50.00"))
+
+
+def test_perform_pix_nonexistent_destination_account(db_session, id_conta_origem):
+    service = PixService(db_session)
+    with pytest.raises(ContaNaoEncontradaException, match="Conta de destino não encontrada."):
+        service.realizar_pix(id_conta_origem, 999999, Decimal("50.00"))
+
+
+def test_perform_pix_same_account(db_session, id_conta_origem):
+    service = PixService(db_session)
+    with pytest.raises(ValueError, match="Não é possivel realizar Pix para a própria conta."):
+        service.realizar_pix(
+            id_conta_origem, id_conta_origem, Decimal("50.00"))
+
+
+def test_adding_balance_invalid_value(db_session, id_conta_origem):
+    service = PixService(db_session)
+    with pytest.raises(ValueError, match="O valor adicionado deve ser maior que zero."):
+        service.adding_balance(id_conta_origem, Decimal("-10.00"))
+
+
+def test_adding_balance_nonexistent_account(db_session):
+    service = PixService(db_session)
+    with pytest.raises(ContaNaoEncontradaException, match="Conta não encontrada."):
+        service.adding_balance(999999, Decimal("100.00"))
+
+
+def test_perform_pix_failure_bank_rollback(db_session, id_conta_origem, id_conta_destino, mocker):
+    service = PixService(db_session)
+    service.adding_balance(id_conta_origem, 250.00)
+
+    mocker.patch.object(service.pix_repo, "record_transaction",
+                        side_effect=Exception("Erro forçado do banco"))
+
+    with pytest.raises(Exception, match="Erro forçado do banco"):
+        service.realizar_pix(
+            id_conta_origem, id_conta_destino, Decimal("50.00"))
+
+# Validates the account deposit transaction
 
 
 def test_adding_balance_to_account(db_session, id_conta_origem):

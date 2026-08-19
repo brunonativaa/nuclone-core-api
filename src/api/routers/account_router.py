@@ -10,10 +10,10 @@ from src.api.schemas.account_schema import (
     AccountBalanceOutput
 )
 
-router = APIRouter(prefix="/accounts", tags=["Accounts"])
+router = APIRouter(tags=["Accounts"])
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, response_model=AccountCreatedResponse)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=AccountCreatedResponse)
 def create_account(payload: AccountCreateInput, db: Session = Depends(get_db)):
     service = ContaService(db)
     try:
@@ -33,7 +33,7 @@ def create_account(payload: AccountCreateInput, db: Session = Depends(get_db)):
         )
 
 
-@router.get("/{id_conta}/balance", status_code=status.HTTP_200_OK, response_model=AccountBalanceOutput)
+@router.get("/{id_conta}", status_code=status.HTTP_200_OK, response_model=AccountBalanceOutput)
 def get_account_balance(id_conta: int, db: Session = Depends(get_db)):
     service = ContaService(db)
     try:
