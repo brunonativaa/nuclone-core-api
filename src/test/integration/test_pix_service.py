@@ -16,7 +16,7 @@ def test_perform_pix_nonexistent_source_account(db_session, id_conta_destino):
 
 def test_perform_pix_nonexistent_destination_account(db_session, id_conta_origem):
     service = PixService(db_session)
-    with pytest.raises(ContaNaoEncontradaException, match="Conta de destino não encontrada."):
+    with pytest.raises(ContaNaoEncontradaException, match="Conta de destino PIX não encontrada."):
         service.realizar_pix(id_conta_origem, 999999, Decimal("50.00"))
 
 
