@@ -2,15 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from src.core.database import get_db
 from src.services.pix_service import (
-    PixService, SaldoInsuficienteException, ContaNaoEncontradaException)
+    PixService, SaldoInsuficienteException, ContaNaoEncontradaException,)
+from src.api.schemas.pix_schema import PixTransferInput, PixTransferOutput, PixKeyInput
+
+router = APIRouter(tags=["Pix Transactions"])
 
 
-from src.api.schemas.pix_schema import PixTransferInput, PixTransferOutput
-
-router = APIRouter(prefix="/pix/v1", tags=["Pix Transactions"])
-
-
-@router.post("/transferir", status_code=status.HTTP_200_OK, response_model=PixTransferOutput)
+@router.post("/transfer", status_code=status.HTTP_200_OK, response_model=PixTransferOutput)
 def transfer_pix(payload: PixTransferInput, db: Session = Depends(get_db)):
     service = PixService(db)
     try:
@@ -24,7 +22,39 @@ def transfer_pix(payload: PixTransferInput, db: Session = Depends(get_db)):
             id_transacao=transaction.id_transacao,
             valor=payload.valor
         )
-    except (SaldoInsuficienteException, ContaNaoEncontradaException) as e:
+
+    except ContaNaoEncontradaException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+
+        )
+
+    except (SaldoInsuficienteException, ValueError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.post("/keys", status_code=status.HTTP_201_CREATED)
+def create_pix_key(payload: PixKeyInput, db: Session = Depends(get_db)):
+
+    service = PixService(db)
+    try:
+        service.register_pix_key(
+            id_conta=payload.id_conta,
+            key_type=payload.tipo_chave
+        )
+
+        return {"message": "Chave Pix Cadastrada com seucesso!"}
+
+    except ContaNaoEncontradaException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)

@@ -11,7 +11,7 @@ app = FastAPI(title="Nuclone Core API",
 
 app.include_router(cliente_router, prefix="/api/v1/customer")
 app.include_router(account_router, prefix="/api/v1/accounts")
-app.include_router(pix_router)
+app.include_router(pix_router, prefix="/api/v1/pix")
 
 
 @app.get('/', tags=["Health Check"])

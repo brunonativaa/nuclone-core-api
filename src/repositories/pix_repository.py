@@ -1,5 +1,10 @@
 from decimal import Decimal
+from typing import Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
+from src.models.account_model import ContaModel
+from src.models.customer_model import ClienteModel
+from src.models.telephone_model import TelefoneModel
 from src.models.transaction_model import TransacaoModel
 from src.models.balance_account_model import SaldoContaModel
 
@@ -8,6 +13,21 @@ class PixRepository:
 
     def __init__(self, db: Session):
         self.db = db
+
+    def search_account_by_key(self, key: str) -> Optional[ContaModel]:
+        return (
+            self.db.query(ContaModel)
+            .join(ClienteModel, ContaModel.id_cliente == ClienteModel.id_cliente)
+            .outerjoin(TelefoneModel, ClienteModel.id_cliente == TelefoneModel.id_cliente)
+            .filter(
+                or_(
+                    ClienteModel.cpf == key,
+                    ClienteModel.email == key,
+                    TelefoneModel.numero == key
+                )
+            )
+            .first()
+        )
 
     def update_saldo(self, id_conta, valor):
         saldo = self.db.query(SaldoContaModel).filter_by(

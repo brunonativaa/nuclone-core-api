@@ -19,6 +19,20 @@ class PixService:
         self.conta_repo = ContaRepository(db)
         self.pix_repo = PixRepository(db)
 
+    def register_pix_key(self, id_conta: int, key_type: str):
+
+        conta = self.conta_repo.search_account(id_conta)
+        if not conta:
+            raise ContaNaoEncontradaException(
+                f"Conta com ID {id_conta} não encontrada.")
+
+        valid_types = ["CPF", "EMAIL", "TELEFONE", "ALEATORIA"]
+        if key_type.upper() not in valid_types:
+            raise ValueError(
+                f"Tipo de chave '{key_type}' inválido. Tipos aceitos: {valid_types}")
+
+        return True
+
     def realizar_pix(self, id_conta_origem: int, id_conta_destino: int, valor):
 
         valor_decimal = Decimal(str(valor))
@@ -32,7 +46,7 @@ class PixService:
 
         if not conta_destino:
             raise ContaNaoEncontradaException(
-                "Conta de destino não encontrada.")
+                "Conta de destino PIX não encontrada.")
 
         if id_conta_origem == id_conta_destino:
             raise ValueError(
@@ -47,7 +61,6 @@ class PixService:
         try:
 
             self.pix_repo.debit(id_conta_origem, valor_decimal)
-
             self.pix_repo.credit(id_conta_destino, valor_decimal)
 
             dados_transacao = self.pix_repo.record_transaction({
@@ -55,12 +68,8 @@ class PixService:
                 "id_conta_destino": id_conta_destino,
                 "tipo_transacao": TipoTransacaoEnum.PIX,
                 "valor": valor_decimal
-
-
-
             })
 
-            self.db.flush()
             self.db.commit()
             return dados_transacao
 
@@ -82,7 +91,6 @@ class PixService:
         try:
 
             saldo_atualizado = self.pix_repo.credit(id_conta, valor_decimal)
-
             self.db.commit()
             return saldo_atualizado
 

@@ -2,6 +2,11 @@ from pydantic import BaseModel, field_validator
 from decimal import Decimal
 
 
+class PixKeyInput(BaseModel):
+    id_conta: int
+    tipo_chave: str
+
+
 class PixTransferInput(BaseModel):
     id_conta_origem: int
     id_conta_destino: int
