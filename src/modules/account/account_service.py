@@ -1,6 +1,6 @@
 import random
-from src.repositories.account_repository import ContaRepository
-from src.repositories.customer_repository import ClienteRepository
+from src.modules.account.account_repository import ContaRepository, ContaModel
+from src.modules.customer.customer_repository import ClienteRepository
 
 
 class ContaNaoEncontradaException(Exception):
@@ -50,6 +50,18 @@ class ContaService:
         except Exception as e:
             self.db.rollback()
             raise e
+
+    def get_by_id(self, id_conta: int) -> ContaModel:
+        # Busca a conta pelo ID no banco de dados
+        account = self.db.query(ContaModel).filter(
+            ContaModel.id_conta == id_conta).first()
+
+        # Se a conta não existir, dispara a exceção tratada no router
+        if not account:
+            raise ContaNaoEncontradaException(
+                f"Conta com ID {id_conta} não encontrada.")
+
+        return account
 
     def get_saldo(self, id_conta: int):
         conta = self.conta_repo.search_account(id_conta)
