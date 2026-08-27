@@ -1,4 +1,4 @@
-from src.repositories.customer_repository import ClienteRepository
+from src.modules.customer.customer_repository import ClienteRepository
 
 
 class ClienteJaExisteException(Exception):

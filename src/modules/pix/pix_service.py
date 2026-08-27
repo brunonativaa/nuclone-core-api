@@ -1,7 +1,7 @@
 from decimal import Decimal
-from src.models.transaction_model import TipoTransacaoEnum
-from src.repositories.account_repository import ContaRepository
-from src.repositories.pix_repository import PixRepository
+from src.modules.account.account_model import TipoTransacaoEnum
+from src.modules.account.account_repository import ContaRepository
+from src.modules.pix.pix_repository import PixRepository
 
 
 class SaldoInsuficienteException(Exception):

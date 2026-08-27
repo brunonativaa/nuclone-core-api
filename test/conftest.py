@@ -2,6 +2,7 @@ import datetime
 import random
 import pytest
 from fastapi.testclient import TestClient
+<<<<<<< HEAD:src/test/conftest.py
 from sqlalchemy.orm import sessionmaker
 
 from src.main import app
@@ -9,6 +10,13 @@ from src.core.database import Base, engine, SessionLocal, get_db
 from src.models.account_model import ContaModel
 from src.models.balance_account_model import SaldoContaModel
 from src.models.customer_model import ClienteModel
+=======
+
+from src.main import app
+from src.core.database import engine, SessionLocal, get_db
+from src.modules.account.account_model import ContaModel, SaldoContaModel
+from src.modules.customer.customer_model import ClienteModel
+>>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature)):test/conftest.py
 
 
 @pytest.fixture(scope="function")
@@ -17,7 +25,8 @@ def db_session():
     transaction = connection.begin()
 
     session = SessionLocal(
-        bind=connection, join_transaction_mode="create_savepoint"
+        bind=connection,
+        join_transaction_mode="create_savepoint"
     )
 
     yield session
@@ -29,7 +38,10 @@ def db_session():
 
 @pytest.fixture
 def client(db_session):
+<<<<<<< HEAD:src/test/conftest.py
 
+=======
+>>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature)):test/conftest.py
     def _override_get_db():
         try:
             yield db_session
@@ -45,10 +57,12 @@ def client(db_session):
 @pytest.fixture
 def valid_customer_data():
     random_number = random.randint(10000, 99999)
+    # Gerador simples para evitar violação de UNIQUE constraint no CPF
+    random_cpf = f"{random_number:05d}{random.randint(10000, 99999):05d}1"
 
     return {
         "nome": "Bruno Typer2@26",
-        "cpf": f"99988877701",
+        "cpf": random_cpf,
         "email": f"pytest_{random_number}@email.com",
         "senha": "senha_segura_test",
         "sexo": "M",
@@ -58,15 +72,13 @@ def valid_customer_data():
 
 @pytest.fixture
 def id_conta_origem(db_session, valid_customer_data):
-    # 1. Cria o Cliente primeiro para satisfazer a ForeignKey
     cliente = ClienteModel(**valid_customer_data)
     db_session.add(cliente)
     db_session.flush()
 
-    # 2. Cria a Conta passando id_cliente, num_conta e agencia
     random_num = random.randint(10000, 99999)
     conta = ContaModel(
-        id_cliente=cliente.id_cliente,  # Ajuste para cliente.id se o atributo for .id
+        id_cliente=cliente.id_cliente,
         num_conta=f"000{random_num}-1",
         agencia="0001",
         tipo_conta="PF"
@@ -74,6 +86,7 @@ def id_conta_origem(db_session, valid_customer_data):
     db_session.add(conta)
     db_session.flush()
 
+<<<<<<< HEAD:src/test/conftest.py
     # 3. Cria o Saldo zerado vinculado à conta (usando conta.id_conta)
     saldo = SaldoContaModel(
         id_conta=conta.id_conta,
@@ -83,17 +96,29 @@ def id_conta_origem(db_session, valid_customer_data):
     )
     db_session.add(saldo)
     db_session.commit()
+=======
+    saldo = SaldoContaModel(
+        id_conta=conta.id_conta,
+        saldo_disponivel=100.00,
+        saldo_bloqueado=0.00,
+        ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
+    )
+    db_session.add(saldo)
+    # CORRIGIDO: flush() em vez de commit() para manter a isolação da transação
+    db_session.flush()
+>>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature)):test/conftest.py
 
     return conta.id_conta
 
 
 @pytest.fixture
 def id_conta_destino(db_session):
-    # 1. Cria o segundo Cliente
     random_number = random.randint(10000, 99999)
+    random_cpf = f"{random_number:05d}{random.randint(10000, 99999):05d}2"
+
     dados_destino = {
         "nome": "Cliente Destino Teste",
-        "cpf": f"{random_number}123456",
+        "cpf": random_cpf,
         "email": f"destino_{random_number}@email.com",
         "senha": "senha_segura_test",
         "sexo": "F",
@@ -103,7 +128,6 @@ def id_conta_destino(db_session):
     db_session.add(cliente)
     db_session.flush()
 
-    # 2. Cria a Conta de destino
     conta = ContaModel(
         id_cliente=cliente.id_cliente,
         num_conta=f"000{random_number}-2",
@@ -113,11 +137,18 @@ def id_conta_destino(db_session):
     db_session.add(conta)
     db_session.flush()
 
+<<<<<<< HEAD:src/test/conftest.py
     # 3. Cria o Saldo zerado
     saldo = SaldoContaModel(
         id_conta=conta.id_conta,
         saldo_disponivel=0,
         saldo_bloqueado=0,
+=======
+    saldo = SaldoContaModel(
+        id_conta=conta.id_conta,
+        saldo_disponivel=0.00,
+        saldo_bloqueado=0.00,
+>>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature)):test/conftest.py
         ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
     )
     db_session.add(saldo)
