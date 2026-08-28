@@ -4,11 +4,7 @@ from src.core.database import get_db
 from src.modules.customer.customer_service import ClienteService, ClienteJaExisteException, ClienteNaoEncontradoException
 from src.modules.customer.customer_schema import ClienteCreateInput
 
-<<<<<<< HEAD:src/api/routers/customer_router.py
-router = APIRouter(tags=["Customers"])
-=======
 router = APIRouter(prefix="/customers", tags=["Clientes"])
->>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature)):src/modules/customer/customer_router.py
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
