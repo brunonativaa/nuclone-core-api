@@ -1,15 +1,18 @@
+from faker import Faker
 import pytest
+
+fake = Faker('pt_BR')
 
 
 @pytest.mark.e2e
 def test_create_customer_success(client):
     payload = {
-        "nome": "Cliente Teste 100%",
-        "cpf": "123.456.789-20",
+        "nome": fake.name(),
+        "cpf": fake.cpf().replace(".", "").replace("-", ""),
         "sexo": "M",
-        "email": "teste100@email.com",
+        "email": fake.email(),
         "senha": "senha145",
-        "data_nascimento": "1995-01-01"
+        "data_nascimento": "2002-04-07"
     }
 
     response = client.post("/api/v1/customers", json=payload)
@@ -18,5 +21,5 @@ def test_create_customer_success(client):
 
 
 def test_searching_nonexistent_customer_account_return_404(client):
-    response = client.get("/api/v1/customer/999999")
+    response = client.get("/api/v1/customers/999999")
     assert response.status_code == 404

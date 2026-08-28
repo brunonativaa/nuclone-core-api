@@ -1,5 +1,6 @@
 import re
 from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
+from typing import Optional
 
 
 class ClienteCreateInput(BaseModel):
