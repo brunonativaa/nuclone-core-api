@@ -4,10 +4,10 @@ from src.core.database import get_db
 from src.modules.customer.customer_service import ClienteService, ClienteJaExisteException, ClienteNaoEncontradoException
 from src.modules.customer.customer_schema import ClienteCreateInput
 
-router = APIRouter(prefix="/customers", tags=["Clientes"])
+router = APIRouter(tags=["Clientes"])
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_customer(cliente: ClienteCreateInput, db: Session = Depends(get_db)):
     service = ClienteService(db)
 
