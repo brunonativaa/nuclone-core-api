@@ -9,13 +9,8 @@ app = FastAPI(title="Nuclone Core API",
               version="1.0.0")
 
 
-<<<<<<< HEAD
-app.include_router(cliente_router, prefix="/api/v1/customer")
-app.include_router(account_router, prefix="/api/v1/accounts")
-=======
 app.include_router(cliente_router, prefix="/api/v1")
-app.include_router(account_router, prefix="/api/v1")
->>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature))
+app.include_router(account_router, prefix="/api/v1/accounts")
 app.include_router(pix_router, prefix="/api/v1/pix")
 
 

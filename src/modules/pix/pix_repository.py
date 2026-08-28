@@ -1,16 +1,9 @@
 from decimal import Decimal
 from typing import Optional
-from sqlalchemy.orm import Session
-<<<<<<< HEAD:src/repositories/pix_repository.py
 from sqlalchemy import or_
-from src.models.account_model import ContaModel
-from src.models.customer_model import ClienteModel
-from src.models.telephone_model import TelefoneModel
-from src.models.transaction_model import TransacaoModel
-from src.models.balance_account_model import SaldoContaModel
-=======
-from src.modules.account.account_model import TransacaoModel, SaldoContaModel
->>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature)):src/modules/pix/pix_repository.py
+from sqlalchemy.orm import Session
+from src.modules.account.account_model import ContaModel, TransacaoModel, SaldoContaModel
+from src.modules.customer.customer_model import ClienteModel, TelefoneModel
 
 
 class PixRepository:

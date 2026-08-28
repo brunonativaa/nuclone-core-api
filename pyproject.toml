@@ -29,10 +29,11 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-<<<<<<< HEAD
+pythonpath = [".","src"]
 markers = [
     "unit: Testes unitários do sistema.",
-    "e2e: testes de ponta a ponta"
+    "e2e: testes de ponta a ponta",
+    
 ]
 
 [dependency-groups]
@@ -40,7 +41,6 @@ dev = [
     "httpx2 (>=2.12.0,<3.0.0)",
     "pytest-cov (>=7.1.0,<8.0.0)"
 ]
-=======
-pythonpath = ["."]
-testpaths = ["test"]
->>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature))
+
+
+

@@ -2,55 +2,31 @@ import datetime
 import random
 import pytest
 from fastapi.testclient import TestClient
-<<<<<<< HEAD:src/test/conftest.py
-from sqlalchemy.orm import sessionmaker
-
-from src.main import app
-from src.core.database import Base, engine, SessionLocal, get_db
-from src.models.account_model import ContaModel
-from src.models.balance_account_model import SaldoContaModel
-from src.models.customer_model import ClienteModel
-=======
 
 from src.main import app
 from src.core.database import engine, SessionLocal, get_db
 from src.modules.account.account_model import ContaModel, SaldoContaModel
 from src.modules.customer.customer_model import ClienteModel
->>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature)):test/conftest.py
 
 
 @pytest.fixture(scope="function")
 def db_session():
-    connection = engine.connect()
-    transaction = connection.begin()
-
-    session = SessionLocal(
-        bind=connection,
-        join_transaction_mode="create_savepoint"
-    )
-
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.rollback()  # Desfaz as alterações após cada teste
+        session.close()
 
 
 @pytest.fixture
 def client(db_session):
-<<<<<<< HEAD:src/test/conftest.py
-
-=======
->>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature)):test/conftest.py
     def _override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
+        yield db_session
 
     app.dependency_overrides[get_db] = _override_get_db
-    with TestClient(app) as test_client:
-        yield test_client
+    with TestClient(app) as c:
+        yield c
     app.dependency_overrides.clear()
 
 
@@ -86,17 +62,6 @@ def id_conta_origem(db_session, valid_customer_data):
     db_session.add(conta)
     db_session.flush()
 
-<<<<<<< HEAD:src/test/conftest.py
-    # 3. Cria o Saldo zerado vinculado à conta (usando conta.id_conta)
-    saldo = SaldoContaModel(
-        id_conta=conta.id_conta,
-        saldo_disponivel=100.00,
-        saldo_bloqueado=0,
-        ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
-    )
-    db_session.add(saldo)
-    db_session.commit()
-=======
     saldo = SaldoContaModel(
         id_conta=conta.id_conta,
         saldo_disponivel=100.00,
@@ -104,9 +69,7 @@ def id_conta_origem(db_session, valid_customer_data):
         ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
     )
     db_session.add(saldo)
-    # CORRIGIDO: flush() em vez de commit() para manter a isolação da transação
-    db_session.flush()
->>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature)):test/conftest.py
+    db_session.commit()  # Garante persistência visível na API durante o teste
 
     return conta.id_conta
 
@@ -137,21 +100,14 @@ def id_conta_destino(db_session):
     db_session.add(conta)
     db_session.flush()
 
-<<<<<<< HEAD:src/test/conftest.py
     # 3. Cria o Saldo zerado
     saldo = SaldoContaModel(
         id_conta=conta.id_conta,
         saldo_disponivel=0,
         saldo_bloqueado=0,
-=======
-    saldo = SaldoContaModel(
-        id_conta=conta.id_conta,
-        saldo_disponivel=0.00,
-        saldo_bloqueado=0.00,
->>>>>>> f609300 (refactor(arch): reorganizar estrutura do projeto para arquitetura modular (package-by-feature)):test/conftest.py
         ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
     )
     db_session.add(saldo)
-    db_session.flush()
+    db_session.commit()  # Garante persistência visível na API durante o teste
 
     return conta.id_conta
