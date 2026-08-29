@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from src.modules.account.account_service import (
+from src.modules.account.service import (
     ContaService,
     ClienteNaoEncontradoException,
     ContaNaoEncontradaException

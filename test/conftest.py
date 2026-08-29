@@ -5,8 +5,8 @@ from fastapi.testclient import TestClient
 
 from src.main import app
 from src.core.database import engine, SessionLocal, get_db
-from src.modules.account.account_model import ContaModel, SaldoContaModel
-from src.modules.customer.customer_model import ClienteModel
+from src.modules.account.model import ContaModel, SaldoContaModel
+from src.modules.customer.model import ClienteModel
 
 
 @pytest.fixture(scope="function")

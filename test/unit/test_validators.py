@@ -1,8 +1,8 @@
 import pytest
 from decimal import Decimal
 from pydantic import ValidationError
-from src.modules.pix.pix_schema import PixTransferInput
-from src.modules.customer.customer_schema import ClienteCreateInput
+from src.modules.pix.schema import PixTransferInput
+from src.modules.customer.schema import ClienteCreateInput
 
 
 # Calculator/Formatter Function

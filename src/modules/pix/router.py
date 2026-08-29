@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from src.core.database import get_db
-from src.modules.pix.pix_service import (
+from src.modules.pix.service import (
     PixService, SaldoInsuficienteException, ContaNaoEncontradaException,)
-from src.modules.pix.pix_schema import PixTransferInput, PixTransferOutput, PixKeyInput
+from src.modules.pix.schema import PixTransferInput, PixTransferOutput, PixKeyInput
 
 router = APIRouter(tags=["Pix Transactions"])
 

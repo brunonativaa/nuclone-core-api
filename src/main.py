@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from src.modules.customer.customer_router import router as cliente_router
-from src.modules.account.account_router import router as account_router
-from src.modules.pix.pix_router import router as pix_router
+from src.modules.customer.router import router as cliente_router
+from src.modules.account.router import router as account_router
+from src.modules.pix.router import router as pix_router
 
 
 app = FastAPI(title="Nuclone Core API",
