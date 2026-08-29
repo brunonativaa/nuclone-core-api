@@ -1,5 +1,5 @@
 import pytest
-from src.modules.customer.customer_service import (
+from src.modules.customer.service import (
     ClienteService,
     ClienteJaExisteException,
     ClienteNaoEncontradoException

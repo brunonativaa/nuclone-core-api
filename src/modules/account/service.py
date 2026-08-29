@@ -1,6 +1,6 @@
 import random
-from src.modules.account.account_repository import ContaRepository, ContaModel
-from src.modules.customer.customer_repository import ClienteRepository
+from src.modules.account.repository import ContaRepository, ContaModel
+from src.modules.customer.repository import ClienteRepository
 
 
 class ContaNaoEncontradaException(Exception):

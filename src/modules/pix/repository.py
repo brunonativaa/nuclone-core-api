@@ -2,8 +2,8 @@ from decimal import Decimal
 from typing import Optional
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
-from src.modules.account.account_model import ContaModel, TransacaoModel, SaldoContaModel
-from src.modules.customer.customer_model import ClienteModel, TelefoneModel
+from src.modules.account.model import ContaModel, TransacaoModel, SaldoContaModel
+from src.modules.customer.model import ClienteModel, TelefoneModel
 
 
 class PixRepository:

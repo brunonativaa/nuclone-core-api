@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from src.core.database import get_db
-from src.modules.customer.customer_service import ClienteService, ClienteJaExisteException, ClienteNaoEncontradoException
-from src.modules.customer.customer_schema import ClienteCreateInput
+from src.modules.customer.service import ClienteService, ClienteJaExisteException, ClienteNaoEncontradoException
+from src.modules.customer.schema import ClienteCreateInput
 
 router = APIRouter(tags=["Clientes"])
 

@@ -1,9 +1,9 @@
 import random
 from decimal import Decimal
 import pytest
-from src.modules.customer.customer_service import ClienteService
-from src.modules.account.account_service import ContaService
-from src.modules.pix.pix_service import (
+from src.modules.customer.service import ClienteService
+from src.modules.account.service import ContaService
+from src.modules.pix.service import (
     PixService,
     SaldoInsuficienteException,
     ContaNaoEncontradaException

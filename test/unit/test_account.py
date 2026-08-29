@@ -1,8 +1,8 @@
 import pytest
-from src.modules.customer.customer_service import ClienteService
-from src.modules.account.account_service import (ContaService,
-                                                 ClienteNaoEncontradoException,
-                                                 ContaNaoEncontradaException)
+from src.modules.customer.service import ClienteService
+from src.modules.account.service import (ContaService,
+                                         ClienteNaoEncontradoException,
+                                         ContaNaoEncontradaException)
 
 
 def test_create_account_success(db_session, valid_customer_data):
