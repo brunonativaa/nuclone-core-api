@@ -24,6 +24,7 @@ SessionLocal = sessionmaker(
 from src.modules.customer.model import ClienteModel, EnderecoModel, TelefoneModel
 from src.modules.account.model import ContaModel, SaldoContaModel, TransacaoModel, TipoTransacaoEnum
 
+
 Base.metadata.create_all(bind=engine)
 
 

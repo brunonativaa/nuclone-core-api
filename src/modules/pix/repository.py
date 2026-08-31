@@ -4,6 +4,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from src.modules.account.model import ContaModel, TransacaoModel, SaldoContaModel
 from src.modules.customer.model import ClienteModel, TelefoneModel
+from src.modules.pix.model import KeyPixModel
 
 
 class PixRepository:
