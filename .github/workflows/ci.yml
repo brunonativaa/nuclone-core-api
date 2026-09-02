@@ -32,28 +32,32 @@ jobs:
           --health-retries 5
 
     steps:
-      # 1.  Baixa o código do repositório (para o poetry.lock existir)
+      # 1. Baixa o código do repositório
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2.  Instala o Poetry no ambiente
+      # 2. Instala o Poetry no ambiente
       - name: Install poetry
         run: pipx install poetry
 
-      # 3.  Configura o Python + Cache do Poetry
+      # 3. Configura o Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          
 
-      # 4.  Instala as dependências do projeto
+      # 4. Instala as dependências do projeto
       - name: Install dependencies
         run: poetry install --no-root --no-interaction
 
-      # 5.  Executa a suíte de testes
+      # 5. Executa as Migrations do Banco
+      - name: Run Database Migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: poetry run alembic upgrade head
+
+      # 6. Executa a suíte de testes
       - name: Run Pytest
         env:
           DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/nuclone_db"
-        run: |
-          poetry run pytest -v
+        run: poetry run pytest -v

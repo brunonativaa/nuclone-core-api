@@ -4,19 +4,27 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.main import app
-from src.core.database import engine, SessionLocal, get_db
+# Importa diretamente a instância do engine do core do projeto
+from src.core.database import engine, SessionLocal, get_db, Base
 from src.modules.account.model import ContaModel, SaldoContaModel
 from src.modules.customer.model import ClienteModel
 from src.modules.pix.model import KeyPixModel
 
 
+@pytest.fixture(scope="session")
+def setup_db():
+    """Cria as tabelas apenas quando o banco for realmente necessário."""
+    Base.metadata.create_all(bind=engine)
+    yield
+    Base.metadata.drop_all(bind=engine)
+
+
 @pytest.fixture(scope="function")
-def db_session():
+def db_session(setup_db):  # Passa o setup_db como dependência aqui
     connection = engine.connect()
     transaction = connection.begin()
     session = SessionLocal(bind=connection)
 
-    # Inicia um SAVEPOINT para que commits internos não afetem o rollback global do teste
     session.begin_nested()
 
     @pytest.hookimpl(tryfirst=True)
@@ -43,17 +51,13 @@ def client(db_session):
 
 @pytest.fixture
 def chave_pix_destino(db_session, id_conta_destino):
-    # Insira uma chave pix fictícia associada à conta de destino
-    # Ajuste a importação conforme seu model
-
     chave = KeyPixModel(
         id_conta=id_conta_destino,
         tipo_chave="EMAIL",
         valor_chave="destino@email.com"
     )
     db_session.add(chave)
-    db_session.commit()
-    db_session.refresh(chave)
+    db_session.flush()  # Usar flush em vez de commit para não estourar o Savepoint
     return chave.valor_chave
 
 
@@ -65,15 +69,13 @@ def chave_pix_origem(db_session, id_conta_origem):
         valor_chave="origem@email.com"
     )
     db_session.add(chave)
-    db_session.commit()
-    db_session.refresh(chave)
+    db_session.flush()  # Usar flush em vez de commit para não estourar o Savepoint
     return chave.valor_chave
 
 
 @pytest.fixture
 def valid_customer_data():
     uid = str(uuid.uuid4())[:8]
-    # Usa UUID para garantir 100% de probabilidade de dados ÚNICOS sem colisão
     return {
         "nome": f"Bruno Teste {uid}",
         "cpf": f"{uuid.uuid4().int}"[:11],
@@ -107,7 +109,6 @@ def id_conta_origem(db_session, valid_customer_data):
         ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
     )
     db_session.add(saldo)
-    # Troque commit por flush! O flush atribui os IDs sem persistir definitivamente
     db_session.flush()
 
     return conta.id_conta
