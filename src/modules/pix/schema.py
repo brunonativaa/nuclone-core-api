@@ -1,15 +1,30 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 from decimal import Decimal
+from typing import Literal, Optional
+
+# 1. Schema para Cadastro de Chave Pix
 
 
-class PixKeyInput(BaseModel):
+class PixKeyCreateInput(BaseModel):
     id_conta: int
+    tipo_chave: Literal["CPF", "EMAIL", "TELEFONE", "ALEATORIA"]
+    valor_chave: str
+
+
+class PixCreatedResponse(BaseModel):
+    message: str
+    id_chave: int
     tipo_chave: str
+    valor_chave: str
+
+# 2. Schema para Transferência Pix (via Chave Pix ou ID)
 
 
 class PixTransferInput(BaseModel):
     id_conta_origem: int
-    id_conta_destino: int
+    # a ideia é realizar tanto por ID da conta quanto por chave
+    id_conta_destino: Optional[int] = None
+    chave_destino: Optional[str] = None  # A chave Pix de quem vai receber
     valor: Decimal
 
     @field_validator("valor")
@@ -24,3 +39,11 @@ class PixTransferOutput(BaseModel):
     message: str
     id_transacao: int
     valor: Decimal
+
+
+class AccountOutput(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AccountBalanceOutput(BaseModel):
+    model_config = ConfigDict(from_attributes=True)

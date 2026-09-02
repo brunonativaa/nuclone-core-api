@@ -59,7 +59,7 @@ Verifica o débito na conta de origem (100 - 40 = 60) e o crédito na conta de d
     account_service = ContaService(db_session)
 
     # Executa transferência PIX de R$ 40,00
-    pix_service.realizar_pix(
+    pix_service.make_pix_payment(
         id_conta_origem=source_account.id_conta,
         id_conta_destino=destination_account.id_conta,
         valor=Decimal("40.00")
@@ -82,7 +82,7 @@ def test_execute_pix_insufficient_balance_should_fail(db_session, setup_two_acco
 
     # Tenta enviar R$ 500,00 possuindo apenas R$ 100,00 em conta
     with pytest.raises(SaldoInsuficienteException):
-        pix_service.realizar_pix(
+        pix_service.make_pix_payment(
             id_conta_origem=source_account.id_conta,
             id_conta_destino=destination_account.id_conta,
             valor=Decimal("500.00")
@@ -95,7 +95,7 @@ def test_execute_pix_invalid_destination_account_should_fail(db_session, setup_t
     pix_service = PixService(db_session)
 
     with pytest.raises(ContaNaoEncontradaException):
-        pix_service.realizar_pix(
+        pix_service.make_pix_payment(
             id_conta_origem=source_account.id_conta,
             id_conta_destino=999999,
             valor=Decimal("10.00")

@@ -28,6 +28,7 @@ class ContaModel(Base):
     )
 
     saldo_conta = relationship("SaldoContaModel", back_populates="conta")
+    chaves_pix = relationship("KeyPixModel", back_populates="conta")
 
 
 class TipoTransacaoEnum (str, enum.Enum):

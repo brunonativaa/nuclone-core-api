@@ -4,6 +4,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from src.modules.account.model import ContaModel, TransacaoModel, SaldoContaModel
 from src.modules.customer.model import ClienteModel, TelefoneModel
+from src.modules.pix.model import KeyPixModel
 
 
 class PixRepository:
@@ -14,10 +15,12 @@ class PixRepository:
     def search_account_by_key(self, key: str) -> Optional[ContaModel]:
         return (
             self.db.query(ContaModel)
+            .join(KeyPixModel, ContaModel.id_conta == KeyPixModel.id_conta)
             .join(ClienteModel, ContaModel.id_cliente == ClienteModel.id_cliente)
             .outerjoin(TelefoneModel, ClienteModel.id_cliente == TelefoneModel.id_cliente)
             .filter(
                 or_(
+                    KeyPixModel.valor_chave == key,
                     ClienteModel.cpf == key,
                     ClienteModel.email == key,
                     TelefoneModel.numero == key

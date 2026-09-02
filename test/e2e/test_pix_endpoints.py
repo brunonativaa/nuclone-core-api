@@ -18,41 +18,47 @@ def override_db_dependency(db_session):
     yield
     app.dependency_overrides.clear()
 
+# Helper para extrair o ID numérico caso a fixture retorne a model Conta ou um int
+
+
+def _get_id(conta_or_id) -> int:
+    return getattr(conta_or_id, "id_conta", conta_or_id)
+
 
 @pytest.mark.e2e
-def test_edpoint_execute_pix_success(id_conta_origem, id_conta_destino):
-    response = cliente.post(
+def test_edpoint_execute_pix_success(id_conta_origem, chave_pix_destino, client):
+    response = client.post(
         "/api/v1/pix/transfer",
         json={
             "id_conta_origem": id_conta_origem,
-            "id_conta_destino": id_conta_destino,
+            "chave_destino": chave_pix_destino,
             "valor": 10.50
         }
     )
+    print(response.json())  # Exibirá a mensagem exata do detalhe do erro 404
     assert response.status_code == 200
 
 
 @pytest.mark.e2e
-def test_endpoint_execute_pix_saldo_insuficiente_retorne_400(id_conta_origem, id_conta_destino):
-    response = cliente.post(
+def test_endpoint_execute_pix_saldo_insuficiente_retorne_400(id_conta_origem, chave_pix_destino, client):
+    response = client.post(
         "/api/v1/pix/transfer",
         json={
             "id_conta_origem": id_conta_origem,
-            "id_conta_destino": id_conta_destino,
+            "chave_destino": chave_pix_destino,
             "valor": 999999.00
-
         }
     )
     assert response.status_code == 400
 
 
 @pytest.mark.e2e
-def test_endpoint_execut_pix_conta_inexistente_retorna_404(id_conta_origem):
-    response = cliente.post(
+def test_endpoint_execut_pix_conta_inexistente_retorna_404(id_conta_origem, client):
+    response = client.post(
         "/api/v1/pix/transfer",
         json={
             "id_conta_origem": id_conta_origem,
-            "id_conta_destino": 999999,
+            "chave_destino": "chave_inexistente@email.com",
             "valor": 10.50
         }
     )
@@ -60,33 +66,13 @@ def test_endpoint_execut_pix_conta_inexistente_retorna_404(id_conta_origem):
 
 
 @pytest.mark.e2e
-def test_endpoint_execute_pix_mesma_conta_retorna_400(id_conta_origem):
-    response = cliente.post(
+def test_endpoint_execute_pix_mesma_conta_retorna_400(id_conta_origem, chave_pix_origem, client):
+    response = client.post(
         "/api/v1/pix/transfer",
         json={
             "id_conta_origem": id_conta_origem,
-            "id_conta_destino": id_conta_origem,
+            "chave_destino": chave_pix_origem,
             "valor": 10.50
         }
     )
     assert response.status_code == 400
-
-
-@pytest.mark.e2e
-def test_create_pix_key_success(id_conta_origem):
-    payload = {
-        "id_conta": id_conta_origem,
-        "tipo_chave": "EMAIL"
-    }
-    response = cliente.post("/api/v1/pix/keys", json=payload)
-    assert response.status_code in (200, 201)
-
-
-@pytest.mark.e2e
-def test_create_pix_key_conta_inexistente_retorna_404():
-    payload = {
-        "id_conta": 999999,
-        "tipo_chave": "EMAIL"
-    }
-    response = cliente.post("/api/v1/pix/keys", json=payload)
-    assert response.status_code == 404

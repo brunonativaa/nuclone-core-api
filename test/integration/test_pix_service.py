@@ -11,19 +11,19 @@ from src.modules.pix.service import (
 def test_perform_pix_nonexistent_source_account(db_session, id_conta_destino):
     service = PixService(db_session)
     with pytest.raises(ContaNaoEncontradaException, match="Conta de origem não encontrada."):
-        service.realizar_pix(999999, id_conta_destino, Decimal("50.00"))
+        service.make_pix_payment(999999, id_conta_destino, Decimal("50.00"))
 
 
 def test_perform_pix_nonexistent_destination_account(db_session, id_conta_origem):
     service = PixService(db_session)
-    with pytest.raises(ContaNaoEncontradaException, match="Conta de destino PIX não encontrada."):
-        service.realizar_pix(id_conta_origem, 999999, Decimal("50.00"))
+    with pytest.raises(ContaNaoEncontradaException, match="Conta de destino não encontrada"):
+        service.make_pix_payment(id_conta_origem, 999999, Decimal("50.00"))
 
 
 def test_perform_pix_same_account(db_session, id_conta_origem):
     service = PixService(db_session)
-    with pytest.raises(ValueError, match="Não é possivel realizar Pix para a própria conta."):
-        service.realizar_pix(
+    with pytest.raises(ValueError, match="Não é possível realizar transferência PIX para a mesma conta."):
+        service.make_pix_payment(
             id_conta_origem, id_conta_origem, Decimal("50.00"))
 
 
@@ -47,7 +47,7 @@ def test_perform_pix_failure_bank_rollback(db_session, id_conta_origem, id_conta
                         side_effect=Exception("Erro forçado do banco"))
 
     with pytest.raises(Exception, match="Erro forçado do banco"):
-        service.realizar_pix(
+        service.make_pix_payment(
             id_conta_origem, id_conta_destino, Decimal("50.00"))
 
 # Validates the account deposit transaction
@@ -73,7 +73,7 @@ def test_successfully_complete_a_pix_transfer(db_session, id_conta_origem, id_co
 
     service.adding_balance(id_conta_origem, 250.00)
 
-    transacao = service.realizar_pix(
+    transacao = service.make_pix_payment(
         id_conta_origem, id_conta_destino, 50.00)
 
     assert transacao.valor == Decimal("50.00")
@@ -94,7 +94,7 @@ def test_pix_insufficient_funds(db_session, id_conta_origem, id_conta_destino):
         id_conta_origem).saldo_disponivel
 
     with pytest.raises(SaldoInsuficienteException):
-        service.realizar_pix(id_conta_origem, id_conta_destino, 1000.00)
+        service.make_pix_payment(id_conta_origem, id_conta_destino, 1000.00)
 
     saldo_origem = service.conta_repo.get_saldo(
         id_conta_origem).saldo_disponivel
