@@ -1,6 +1,6 @@
-from src.modules.account.model import ContaModel
-from src.modules.customer.model import ClienteModel
-from src.modules.pix.model import TypeChaveEnum, KeyPixModel
+from src.modules.pix.model import KeyPixModel
+from src.modules.account.model import ContaModel, SaldoContaModel, TransacaoModel
+from src.modules.customer.model import ClienteModel, EnderecoModel, TelefoneModel
 from src.core.database import Base
 import os
 import sys
@@ -8,26 +8,19 @@ from os.path import abspath, dirname
 from dotenv import load_dotenv
 from alembic import context
 
-# 1. Configura o sys.path PRIMEIRO para permitir imports do 'src'
+# 1. Ajusta o caminho de importação
 sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
-# 2. Carrega as variáveis de ambiente do .env local (se existir)
+# 2. Carrega as variáveis de ambiente
 load_dotenv()
 
-# 3. Garante um fallback seguro para a DATABASE_URL caso a ENV esteja vazia
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:postgrespassword@localhost:5432/nuclone_db"
-)
+DEFAULT_DB_URL = "postgresql://postgres:postgrespassword@localhost:5432/nuclone_db"
+DATABASE_URL = os.getenv("DATABASE_URL") or DEFAULT_DB_URL
 
-# 4. Configura a URL no Alembic ANTES de importar os models/database
+# 3. Injeta a URL no Alembic
 config = context.config
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
-# 5. AGORA SIM importa os Models e a Base com o caminho e a URL já ajustados
+# 4. Imports dos Models para registrar no Metadata
 
 target_metadata = Base.metadata
-
-print("--- TABELAS MAPEADAS NO ALEMBIC ---")
-print(list(target_metadata.tables.keys()))
-print("----------------------------------")
