@@ -1,8 +1,8 @@
-"""sync chaves_pix baseline
+"""create_initial_tables
 
-Revision ID: 1eb1f1298dde
+Revision ID: 67043e553a0b
 Revises: 
-Create Date: 2026-09-01 15:25:50.073197
+Create Date: 2026-09-03 15:12:05.100756
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '1eb1f1298dde'
+revision: str = '67043e553a0b'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
