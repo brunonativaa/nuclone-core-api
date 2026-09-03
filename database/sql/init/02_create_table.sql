@@ -8,6 +8,7 @@ CREATE TABLE cliente (
     senha VARCHAR(60) NOT NULL,
     data_nascimento DATE NOT NULL
 );
+
 -- 2. TABELA TELEFONE
 CREATE TABLE telefone (
     id_telefone SERIAL PRIMARY KEY,
@@ -15,6 +16,7 @@ CREATE TABLE telefone (
     numero VARCHAR(15) NOT NULL,
     tipo tipo_num NOT NULL DEFAULT 'CELULAR'
 );
+
 -- 3. TABELA ENDERECO
 CREATE TABLE endereco (
     id_endereco SERIAL PRIMARY KEY,
@@ -26,6 +28,7 @@ CREATE TABLE endereco (
     cep VARCHAR(8) NOT NULL,
     num VARCHAR(10) NOT NULL
 );
+
 -- 4. TABELA CONTA
 CREATE TABLE conta (
     id_conta SERIAL PRIMARY KEY,
@@ -34,6 +37,7 @@ CREATE TABLE conta (
     tipo_conta tipo_conta NOT NULL DEFAULT 'PF',
     agencia VARCHAR(10) NOT NULL
 );
+
 CREATE TABLE saldo_conta (
     id_saldo_conta SERIAL PRIMARY KEY,
     id_conta INTEGER UNIQUE NOT NULL,
@@ -41,6 +45,7 @@ CREATE TABLE saldo_conta (
     saldo_bloqueado DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
     ultima_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE transacao (
     id_transacao SERIAL PRIMARY KEY,
     id_conta_origem INTEGER NOT NULL,
@@ -48,4 +53,14 @@ CREATE TABLE transacao (
     tipo_transacao tipo_transacao NOT NULL DEFAULT 'PIX',
     valor DECIMAL (15, 2) NOT NULL CHECK (valor > 0.00),
     data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+) CREATE TABLE IF NOT EXISTS chaves_pix (
+    id_chave SERIAL PRIMARY KEY,
+    id_conta INT NOT NULL,
+    tipo_chave typekeyenum NOT NULL,
+    valor_chave VARCHAR(255) NOT NULL UNIQUE,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_chaves_pix_conta FOREIGN KEY (id_conta) REFERENCES conta(id_conta) ON DELETE CASCADE
+);
+
+-- 3. Criar o índice explícito para o valor_chave (gerado pelo index=True)
+CREATE INDEX IF NOT EXISTS ix_chaves_pix_valor_chave ON chaves_pix (valor_chave);
