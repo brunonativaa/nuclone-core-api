@@ -1,7 +1,7 @@
 ## 📐 Modelagem do NuClone
 
 <i>Imagem do diagrama:</i>
-![Diagrama NuClone](./database/docs/Nuclone.png)
+![Diagrama NuClone](docs/Nuclone.png)
 
 ### 📐 Decisões de Arquitetura e Modelagem (NuClone)
 
@@ -17,3 +17,13 @@
 🏛️ Arquitetura da Aplicação
 
 Arquitetura Modular (Package by Feature): O projeto adota o padrão de Monólito Modular organizando o código-fonte por domínios de negócio (modules/cliente, modules/pix, etc.). Essa abordagem reduz a carga cognitiva durante a manutenção, garante forte isolamento entre contextos e facilita a transição futura para uma arquitetura de microsserviços, caso haja necessidade de escala... 
+
+📌 Atualização do Esquema de Banco de Dados — Módulo Pix
+
+📖 Visão Geral
+Esta atualização introduz o suporte à gestão de Chaves Pix na modelagem do banco de dados, permitindo a vinculação de múltiplas chaves a uma conta bancária (1:N). O modelo conceitual em DBML foi atualizado no dbdiagram.io para refletir essa melhoria.
+
+🔄 Alterações Realizadas. 
+Novo Enum: typekeyenum Criado para padronizar e restringir os tipos aceitos de chave Pix na aplicação:'CPF' 'EMAIL' 'TELEFONE' 'ALEATORIA'. 
+Nova Tabela:  chaves_pix
+Estrutura adicionada para armazenar os registros das chaves vinculadas às contas Índices e Relacionamentos. 
