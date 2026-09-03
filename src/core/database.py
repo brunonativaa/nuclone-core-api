@@ -7,7 +7,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 load_dotenv()
 
 # 2. Garante fallback caso a variável VENHA VAZIA ("") ou seja NULA (None)
-DEFAULT_DB_URL = "postgresql://postgres:postgrespassword@localhost:5432/nuclone_db"
+DEFAULT_DB_URL = "postgresql://postgres:postgrespassword@localhost:5432/core_banking"
 DATABASE_URL = os.getenv("DATABASE_URL") or DEFAULT_DB_URL
 
 # 3. Cria a engine com a URL tratada
