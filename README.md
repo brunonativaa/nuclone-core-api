@@ -1,4 +1,4 @@
-🚀 Nuclone Core API
+🚀 Nuclone Core API<br>
 O Nuclone Core API é uma engine de serviços bancários (Core Banking API) desenvolvida em Python e FastAPI. O sistema simula operações financeiras críticas de alta concorrência — incluindo onboarding de clientes, gestão de contas e processamento transacional de pagamentos PIX —, garantindo consistência relacional, isolamento de dados e resiliência sob carga.
 
 📌 Principais Funcionalidades
