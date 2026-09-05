@@ -115,6 +115,7 @@ Redoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 -----
 
 🛡️ Decisões de Engenharia<br>
+
 SGBD Relacional: Escolha do PostgreSQL pela robustez de ACID necessária em transações bancárias.
 
 Isolamento de Testes: Utilização de mocks na camada HTTP/Router para garantir execução instantânea da suíte CI/CD e testes isolados no Locust com dados dinâmicos via zfill e timestamps.
