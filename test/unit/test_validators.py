@@ -27,11 +27,12 @@ def test_validate_zero_or_negative_pix_value_generates_error():
             valor=Decimal("0.00")
         )
 
-    assert "Valor da transação Pix deve ser maior que R$0,00" in str(
-        exc_info.value)
-
+    errors = exc_info.value.errors()
+    assert errors[0]["loc"] == ("valor",)
+    assert errors[0]["type"] == "greater_than"
 
 # Verify CPF
+
 
 @pytest.mark.unit
 def test_validate_cpf_success():
