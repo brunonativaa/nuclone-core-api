@@ -8,13 +8,8 @@ cliente = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def override_db_dependency(db_session):
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
 
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_db] = lambda: db_session
     yield
     app.dependency_overrides.clear()
 
@@ -27,15 +22,18 @@ def _get_id(conta_or_id) -> int:
 
 @pytest.mark.e2e
 def test_edpoint_execute_pix_success(id_conta_origem, chave_pix_destino, client):
+
+    origem_id = _get_id(id_conta_origem)
+
     response = client.post(
         "/api/v1/pix/transfer",
         json={
-            "id_conta_origem": id_conta_origem,
+            "id_conta_origem": origem_id,
             "chave_destino": chave_pix_destino,
-            "valor": 10.50
-        }
+            "valor": 10.50,
+        },
     )
-    print(response.json())  # Exibirá a mensagem exata do detalhe do erro 404
+    print(response.json())  # Exibirá a mensagem exata do detalhe do erro
     assert response.status_code == 200
 
 
