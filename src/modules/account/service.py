@@ -1,5 +1,8 @@
 import random
-from src.modules.account.repository import ContaRepository, ContaModel
+from pydantic import BaseModel
+from src.modules.account.model import ContaModel
+from src.modules.account.repository import ContaRepository
+from src.modules.account.schema import AccountCreateInput
 from src.modules.customer.repository import ClienteRepository
 
 
@@ -19,32 +22,35 @@ class ContaService:
         self.cliente_repo = ClienteRepository(db)
 
     def _gerar_num_conta(self) -> str:
-        # Gera um número de conta aleatório de 6 dígitos
         return str(random.randint(100000, 999999))
 
-    def create_account(self, data_conta: dict):
-        id_cliente = data_conta.get("id_cliente")
+    def create_account(self, data_conta) -> ContaModel:
+        # Conversão polimórfica: aceita Pydantic DTO ou dict
+        payload = (
+            data_conta.model_dump()
+            if isinstance(data_conta, BaseModel)
+            else data_conta.copy()
+        )
 
-        # 1. Regra de Negócio: O cliente precisa existir
+        id_cliente = payload.get("id_cliente")
+
+        # 1. Validação da Regra de Negócio
         cliente = self.cliente_repo.get_by_id(id_cliente)
         if not cliente:
             raise ClienteNaoEncontradoException("Cliente não encontrado.")
 
-        # 2. Se não veio num_conta, gera automaticamente
-        if "num_conta" not in data_conta or not data_conta["num_conta"]:
-            data_conta["num_conta"] = self._gerar_num_conta()
+        # 2. Regras de preenchimento
+        if not payload.get("num_conta"):
+            payload["num_conta"] = self._gerar_num_conta()
 
-        if "agencia" not in data_conta:
-            data_conta["agencia"] = "0001"
+        if not payload.get("agencia"):
+            payload["agencia"] = "0001"
 
         try:
-            # 3. Cria a conta
-            nova_conta = self.conta_repo.create_account(data_conta)
-
-            # 4. Cria o registro de saldo zerado atrelado a essa conta
+            # 3. Transação Atômica
+            nova_conta = self.conta_repo.create_account(payload)
             self.conta_repo.create_saldo(nova_conta.id_conta)
 
-            # Commit único da transação inteira
             self.db.commit()
             return nova_conta
         except Exception as e:
@@ -52,21 +58,15 @@ class ContaService:
             raise e
 
     def get_by_id(self, id_conta: int) -> ContaModel:
-        # Busca a conta pelo ID no banco de dados
-        account = self.db.query(ContaModel).filter(
-            ContaModel.id_conta == id_conta).first()
-
-        # Se a conta não existir, dispara a exceção tratada no router
+        account = self.conta_repo.search_account(id_conta)
         if not account:
             raise ContaNaoEncontradaException(
-                f"Conta com ID {id_conta} não encontrada.")
-
+                f"Conta com ID {id_conta} não encontrada."
+            )
         return account
 
     def get_saldo(self, id_conta: int):
         conta = self.conta_repo.search_account(id_conta)
         if not conta:
             raise ContaNaoEncontradaException("Conta não encontrada.")
-
-        saldo = self.conta_repo.get_saldo(id_conta)
-        return saldo
+        return self.conta_repo.get_saldo(id_conta)

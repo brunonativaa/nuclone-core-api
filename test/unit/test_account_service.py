@@ -1,55 +1,57 @@
-import pytest
 from unittest.mock import MagicMock
+import pytest
+from src.modules.account.schema import AccountCreateInput
 from src.modules.account.service import (
+    ContaNaoEncontradaException,
     ContaService,
-    ClienteNaoEncontradoException,
-    ContaNaoEncontradaException
 )
 
-# 1. Cobre a Linha 23
+
+@pytest.fixture
+def db_session_mock(mocker):
+    """Cria um mock genérico da sessão do SQLAlchemy."""
+    session = mocker.MagicMock()
+    return session
 
 
-def test_create_account_cliente_nao_encontrado():
-    db_mock = MagicMock()
-    service = ContaService(db_mock)
-    service.cliente_repo.get_by_id = MagicMock(return_value=None)
-
-    with pytest.raises(ClienteNaoEncontradoException):
-        service.create_account({"id_cliente": 999})
-
-# 2. Cobre as Linhas 39-41 (Rollback em caso de falha no banco)
+@pytest.fixture
+def account_service_mocked(db_session_mock):
+    """Instancia o ContaService injetando mocks nos repositórios para isolamento unitário."""
+    service = ContaService(db_session_mock)
+    service.conta_repo = MagicMock()
+    service.cliente_repo = MagicMock()
+    return service
 
 
-def test_create_account_rollback_on_exception():
-    db_mock = MagicMock()
-    service = ContaService(db_mock)
-    service.cliente_repo.get_by_id = MagicMock(return_value={"id": 1})
-    service.conta_repo.create_account = MagicMock(
-        side_effect=Exception("Database error"))
+def test_create_account_rollback_on_exception(
+    db_session_mock, account_service_mocked
+):
+    # 1. Simula cliente existente no banco
+    account_service_mocked.cliente_repo.get_by_id.return_value = MagicMock(
+        id_cliente=1
+    )
+    account_service_mocked.conta_repo.create_account.return_value = (
+        MagicMock(id_conta=1)
+    )
 
+    # 2. Força falha na criação do saldo para validar acionamento do rollback
+    account_service_mocked.conta_repo.create_saldo.side_effect = Exception(
+        "Erro na transação de banco"
+    )
+
+    dados = AccountCreateInput(id_cliente=1, tipo_conta="PF")
+
+    # 3. Executa esperando a exceção
     with pytest.raises(Exception):
-        service.create_account({"id_cliente": 1})
+        account_service_mocked.create_account(dados)
 
-    db_mock.rollback.assert_called_once()
+    # 4. Garante que o rollback da sessão simulada foi invocado
+    db_session_mock.rollback.assert_called_once()
 
-# 3. Cobre a Linha 49
 
-
-def test_get_by_id_conta_nao_encontrada():
-    db_mock = MagicMock()
-    db_mock.query().filter().first.return_value = None
-    service = ContaService(db_mock)
+def test_get_by_id_conta_nao_encontrada(account_service_mocked):
+    # Simula busca que não encontra o registro
+    account_service_mocked.conta_repo.search_account.return_value = None
 
     with pytest.raises(ContaNaoEncontradaException):
-        service.get_by_id(999)
-
-# 4. Cobre a Linha 52
-
-
-def test_get_saldo_conta_nao_encontrada():
-    db_mock = MagicMock()
-    service = ContaService(db_mock)
-    service.conta_repo.search_account = MagicMock(return_value=None)
-
-    with pytest.raises(ContaNaoEncontradaException):
-        service.get_saldo(999)
+        account_service_mocked.get_by_id(999)

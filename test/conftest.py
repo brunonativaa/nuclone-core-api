@@ -78,11 +78,11 @@ def valid_customer_data():
     uid = str(uuid.uuid4())[:8]
     return {
         "nome": f"Bruno Teste {uid}",
-        "cpf": f"{uuid.uuid4().int}"[:11],
+        "cpf": str(uuid.uuid4().int)[:11].zfill(11),
         "email": f"pytest_{uid}@email.com",
         "senha": "senha_segura_test",
         "sexo": "M",
-        "data_nascimento": "1997-08-15"
+        "data_nascimento": "1997-08-15",
     }
 
 
