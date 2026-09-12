@@ -53,4 +53,5 @@ build/
 # Variaveis de ambiente
 # =============================
 
-.env
+.env.coverage
+.coverage
