@@ -24,3 +24,5 @@ class KeyPixModel(Base):
                        server_default=func.now(), nullable=False)
 
     conta = relationship("ContaModel", back_populates="chaves_pix")
+
+    created_at = Column(DateTime, server_default=func.now())
