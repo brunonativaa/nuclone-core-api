@@ -53,7 +53,9 @@ CREATE TABLE transacao (
     tipo_transacao tipo_transacao NOT NULL DEFAULT 'PIX',
     valor DECIMAL (15, 2) NOT NULL CHECK (valor > 0.00),
     data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) CREATE TABLE IF NOT EXISTS chaves_pix (
+);
+
+CREATE TABLE IF NOT EXISTS chaves_pix (
     id_chave SERIAL PRIMARY KEY,
     id_conta INT NOT NULL,
     tipo_chave typekeyenum NOT NULL,

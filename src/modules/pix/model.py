@@ -20,7 +20,7 @@ class KeyPixModel(Base):
     tipo_chave = Column(
         SQLEnum(TypeChaveEnum, name="typekeyenum"), nullable=False)
     valor_chave = Column(String(255), unique=True, nullable=False, index=True)
-    criado_em = Column(DateTime(timezone=True),
-                       server_default=func.now(), nullable=False)
+    created_at = Column('criado_em', DateTime(timezone=True),
+                        server_default=func.now(), nullable=False)
 
     conta = relationship("ContaModel", back_populates="chaves_pix")
