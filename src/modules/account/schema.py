@@ -16,7 +16,7 @@ class AccountCreateInput(BaseDTO):
 class AccountOutput(BaseDTO):
 
     id_conta: int = Field(..., description="Indentificador único da conta")
-    id_cliente: int = Field(..., decimal_places="ID do cliente proprietário")
+    id_cliente: int = Field(..., description="ID do cliente proprietário")
     num_conta: str = Field(..., description="Número da conta corrente")
     tipo_conta: str = Field(..., description="Tipo da conta (PF/PJ)")
     agencia: str = Field(..., description="Código da agência")
