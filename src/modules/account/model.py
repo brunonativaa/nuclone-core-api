@@ -6,6 +6,7 @@ from src.core.database import Base
 
 
 class ContaModel(Base):
+    
     __tablename__ = "conta"
 
     id_conta = Column(Integer, primary_key=True)
@@ -17,17 +18,18 @@ class ContaModel(Base):
 
     transacoes_enviadas = relationship(
         "TransacaoModel",
-        foreign_keys="[TransacaoModel.id_conta_origem]",
+        foreign_keys="TransacaoModel.id_conta_origem",
         back_populates="conta_origem"
     )
 
     transacoes_recebidas = relationship(
         "TransacaoModel",
-        foreign_keys="[TransacaoModel.id_conta_destino]",
+        foreign_keys="TransacaoModel.id_conta_destino",
         back_populates="conta_destino"
     )
 
-    saldo_conta = relationship("SaldoContaModel", back_populates="conta")
+    # uselist=False garante o relacionamento Um-para-Um (evita retornar lista)
+    saldo_conta = relationship("SaldoContaModel", back_populates="conta", uselist=False)
     chaves_pix = relationship("KeyPixModel", back_populates="conta")
 
 
