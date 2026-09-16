@@ -1,46 +1,59 @@
-from sqlalchemy import Column, Integer, String, Date, CHAR, ForeignKey
-from sqlalchemy.orm import relationship
+import enum
+from sqlalchemy import Numeric, Integer, String, Date, CHAR, ForeignKey, Enum as SQLEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 
 
 class ClienteModel(Base):
-    __tablename__ = 'cliente'
+    __tablename__ = 'clientes'
 
-    id_cliente = Column(Integer, primary_key=True, index=True)
-    nome = Column(String(100), nullable=False)
-    cpf = Column(String(11), unique=True, nullable=False)
-    sexo = Column(CHAR(1))
-    email = Column(String(100), unique=True, nullable=False)
-    senha = Column(String(60), nullable=False)
-    data_nascimento = Column(Date, nullable=False)
+    id_cliente: Mapped[int] = mapped_column(
+        Integer, primary_key=True, index=True)
+    nome: Mapped[str] = mapped_column(String(100), nullable=False)
+    cpf: Mapped[str] = mapped_column(String(11), unique=True, nullable=False)
+    sexo: Mapped[str] = mapped_column(CHAR(1))
+    email: Mapped[str] = mapped_column(
+        String(100), unique=True, nullable=False)
+    senha_hash: Mapped[str] = mapped_column(String(60), nullable=False)
+    pin_transacao_hash: Mapped[str] = mapped_column(
+        String(60), nullable=False)
+    data_nascimento: Mapped[Date] = mapped_column(Date, nullable=False)
 
-    endereco = relationship("EnderecoModel", back_populates="cliente")
-    telefone = relationship("TelefoneModel", back_populates="cliente")
+    endereco = relationship("EnderecoModel", back_populates="clientes")
+    telefone = relationship("TelefoneModel", back_populates="clientes")
+
+
+class TipoNumeroEnum(str, enum.Enum):
+    CELULAR = "CELULAR"
+    FIXO = "RESIDENCIAL"
+    COMERCIAL = "COMERCIAL"
 
 
 class EnderecoModel(Base):
-    __tablename__ = 'endereco'
+    __tablename__ = 'enderecos'
 
-    id_endereco = Column(Integer, primary_key=True, index=True)
-    id_cliente = Column(Integer, ForeignKey(
-        "cliente.id_cliente"), nullable=False)
-    estado = Column(String(2), nullable=False)
-    cidade = Column(String(100), nullable=False)
-    bairro = Column(String(100), nullable=False)
-    rua = Column(String(150), nullable=False)
-    cep = Column(String(8), nullable=False)
-    num = Column(String(10), nullable=False)
+    id_endereco: Mapped[int] = mapped_column(
+        Integer, primary_key=True, index=True)
+    id_cliente: Mapped[int] = mapped_column(Integer, ForeignKey(
+        "clientes.id_cliente"), nullable=False)
+    estado: Mapped[str] = mapped_column(String(2), nullable=False)
+    cidade: Mapped[str] = mapped_column(String(100), nullable=False)
+    bairro: Mapped[str] = mapped_column(String(100), nullable=False)
+    rua: Mapped[str] = mapped_column(String(150), nullable=False)
+    cep: Mapped[str] = mapped_column(String(8), nullable=False)
+    num: Mapped[str] = mapped_column(String(10), nullable=False)
 
-    cliente = relationship("ClienteModel", back_populates="endereco")
+    cliente = relationship("ClienteModel", back_populates="enderecos")
 
 
 class TelefoneModel(Base):
-    __tablename__ = "telefone"
+    __tablename__ = "telefones"
 
-    id_telefone = Column(Integer, primary_key=True)
-    id_cliente = Column(Integer, ForeignKey(
-        "cliente.id_cliente"), nullable=False)
-    numero = Column(String(15), nullable=False)
-    tipo = Column(String, nullable=False, default="CELULAR")
+    id_telefone: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id_cliente: Mapped[int] = mapped_column(Integer, ForeignKey(
+        "clientes.id_cliente"), nullable=False)
+    numero: Mapped[str] = mapped_column(String(15), nullable=False)
+    tipo: Mapped[TipoNumeroEnum] = mapped_column(
+        SQLEnum(TipoNumeroEnum), nullable=False, default=TipoNumeroEnum.CELULAR)
 
-    cliente = relationship("ClienteModel", back_populates="telefone")
+    cliente = relationship("ClienteModel", back_populates="telefones")

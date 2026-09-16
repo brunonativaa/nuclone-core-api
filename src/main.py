@@ -2,8 +2,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from src.core.database import Base, engine
-from src.modules.pix.model import KeyPixModel
-from src.modules.account.model import ContaModel, SaldoContaModel, TransacaoModel
+from src.modules.pix.model import ChavePixModel, TipoChavePixEnum
+from src.modules.account.model import ContaModel, SaldoContaModel
+from src.modules.ledger.models import TransacaoModel, TipoTransacaoEnum, StatusTransacaoEnum
 from src.modules.customer.model import ClienteModel, EnderecoModel, TelefoneModel
 from src.modules.customer.router import router as cliente_router
 from src.modules.account.router import router as account_router

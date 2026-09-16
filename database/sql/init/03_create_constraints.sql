@@ -1,12 +1,12 @@
 ALTER TABLE
-    cliente
+    clientes
 ADD
     CONSTRAINT chk_maior_de_idade CHECK (
         data_nascimento <= CURRENT_DATE - INTERVAL '18 years'
     );
 
 ALTER TABLE
-    cliente
+    clientes
 ADD
     CONSTRAINT cpf_11_digitos CHECK (
         char_length(cpf) = 11
@@ -14,22 +14,22 @@ ADD
     );
 
 ALTER TABLE
-    telefone
+    telefones
 ADD
-    CONSTRAINT telefone_id_client_fk FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE CASCADE;
+    CONSTRAINT telefones_id_client_fk FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente) ON DELETE CASCADE;
 
 ALTER TABLE
-    telefone
+    telefones
 ADD
-    CONSTRAINT telefone_numerico CHECK (numero ~ '^[0-9]+$');
+    CONSTRAINT telefones_numerico CHECK (numero ~ '^[0-9]+$');
 
 ALTER TABLE
-    endereco
+    enderecos
 ADD
-    CONSTRAINT endereco_id_cliente_fk FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE CASCADE;
+    CONSTRAINT enderecos_id_cliente_fk FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente) ON DELETE CASCADE;
 
 ALTER TABLE
-    endereco
+    enderecos
 ADD
     CONSTRAINT cep_8_digitos CHECK (
         char_length(cep) = 8
@@ -37,21 +37,31 @@ ADD
     );
 
 ALTER TABLE
-    conta
+    contas
 ADD
-    CONSTRAINT conta_id_cliente_fk FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE CASCADE;
+    CONSTRAINT contas_id_cliente_fk FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente) ON DELETE CASCADE;
 
 ALTER TABLE
-    saldo_conta
+    saldo_contas
 ADD
-    CONSTRAINT saldo_conta_id_conta_fk FOREIGN KEY (id_conta) REFERENCES conta(id_conta) ON DELETE CASCADE;
+    CONSTRAINT saldo_contas_id_conta_fk FOREIGN KEY (id_conta) REFERENCES contas(id_conta) ON DELETE CASCADE;
+
+ALTER TABLE
+    limites_contas
+ADD
+    CONSTRAINT limites_contas_id_conta_fk FOREIGN KEY (id_conta) REFERENCES contas(id_conta) ON DELETE CASCADE;
+
+ALTER TABLE
+    chaves_pix
+ADD
+    CONSTRAINT chaves_pix_id_conta_fk FOREIGN KEY (id_conta) REFERENCES contas(id_conta) ON DELETE CASCADE;
 
 ALTER TABLE
     transacao
 ADD
-    CONSTRAINT transacao_id_conta_origem_fk FOREIGN KEY (id_conta_origem) REFERENCES conta(id_conta) ON DELETE CASCADE;
+    CONSTRAINT transacao_id_conta_origem_fk FOREIGN KEY (id_conta_origem) REFERENCES contas(id_conta) ON DELETE CASCADE;
 
 ALTER TABLE
     transacao
 ADD
-    CONSTRAINT transacao_id_conta_destino_fk FOREIGN key (id_conta_destino) REFERENCES conta(id_conta) ON DELETE CASCADE;
+    CONSTRAINT transacao_id_conta_destino_fk FOREIGN key (id_conta_destino) REFERENCES contas(id_conta) ON DELETE CASCADE;

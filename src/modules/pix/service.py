@@ -1,9 +1,9 @@
 from decimal import Decimal
 from typing import Optional
 import uuid
-from src.modules.account.model import TipoTransacaoEnum
+from src.modules.ledger.models import TipoTransacaoEnum
 from src.modules.account.repository import ContaRepository
-from src.modules.pix.repository import PixRepository, KeyPixModel
+from src.modules.pix.repository import PixRepository, ChavePixModel
 
 
 class SaldoInsuficienteException(Exception):
@@ -21,7 +21,7 @@ class PixService:
         self.conta_repo = ContaRepository(db)
         self.pix_repo = PixRepository(db)
 
-    def register_pix_key(self, id_conta: int, key_type: str, valor_chave: str = None) -> KeyPixModel:
+    def register_pix_key(self, id_conta: int, key_type: str, valor_chave: str = None) -> ChavePixModel:
         # 1. Valida se a conta existe via Repository
         conta = self.conta_repo.search_account(id_conta)
         if not conta:
@@ -43,7 +43,7 @@ class PixService:
                 "O valor da chave é obrigatório para este tipo de chave.")
 
         # 4. Instancia a Model da chave Pix
-        new_key = KeyPixModel(
+        new_key = ChavePixModel(
             id_conta=id_conta,
             tipo_chave=tipo_upper,
             valor_chave=valor_chave
