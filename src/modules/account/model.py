@@ -1,10 +1,17 @@
 import enum
 from datetime import datetime, timezone
-from typing import List, Optional
-from sqlalchemy import Integer, String, ForeignKey, Numeric, DateTime, Enum as SQLEnum
 from decimal import Decimal
+from typing import TYPE_CHECKING, Optional, List
+from sqlalchemy import String, ForeignKey, Numeric, DateTime, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
+from src.modules.limits.models import LimiteContaModel
+from src.modules.pix.model import ChavePixModel
+
+
+if TYPE_CHECKING:
+    from src.modules.limits.models import LimiteContaModel
+    from src.modules.customer.model import ClienteModel
 
 
 class TipoContaEnum(str, enum.Enum):
@@ -28,13 +35,14 @@ class ContaModel(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
-    cliente = relationship("ClienteModel", back_populates="contas")
-    saldo = relationship("SaldoContaModel", back_populates="contas",
-                         uselist=False, cascade="all, delete-orphan")
-    limites = relationship("LimiteContaModel", back_populates="contas",
-                           uselist=False, cascade="all, delete-orphan")
-    chaves_pix = relationship(
-        "ChavePixModel", back_populates="contas", cascade="all, delete-orphan")
+    cliente: Mapped["ClienteModel"] = relationship(
+        "ClienteModel", back_populates="contas")
+    saldo: Mapped["SaldoContaModel"] = relationship("SaldoContaModel", back_populates="conta",
+                                                    uselist=False, cascade="all, delete-orphan")
+    limites: Mapped[Optional[LimiteContaModel]] = relationship(
+        "LimiteContaModel", back_populates="conta", uselist=False, cascade="all, delete-orphan")
+    chaves_pix: Mapped[List["ChavePixModel"]] = relationship(
+        "ChavePixModel", back_populates="conta", cascade="all, delete-orphan")
 
 
 class SaldoContaModel(Base):
@@ -55,4 +63,5 @@ class SaldoContaModel(Base):
         nullable=False
     )
 
-    conta = relationship("ContaModel", back_populates="saldo_conta")
+    conta: Mapped["ContaModel"] = relationship(
+        "ContaModel", back_populates="saldo")

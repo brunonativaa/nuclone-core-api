@@ -12,17 +12,10 @@ def create_customer(cliente: ClienteCreateInput, db: Session = Depends(get_db)):
     service = ClienteService(db)
 
     try:
+
         new_customer = service.create_customer(cliente.model_dump())
 
-        return {
-            "message": "Cliente cadastrado com sucesso!",
-            "customer": {
-                "id_cliente": new_customer.id_cliente,
-                "nome": new_customer.nome,
-                "cpf": new_customer.cpf,
-                "email": new_customer.email
-            }
-        }
+        return new_customer
 
     except ClienteJaExisteException as e:
         raise HTTPException(

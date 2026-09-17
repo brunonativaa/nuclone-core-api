@@ -1,7 +1,8 @@
 import enum
-from sqlalchemy import Numeric, Integer, String, Date, CHAR, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Integer, String, Date, CHAR, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
+from src.modules.account.model import ContaModel
 
 
 class ClienteModel(Base):
@@ -19,8 +20,12 @@ class ClienteModel(Base):
         String(60), nullable=False)
     data_nascimento: Mapped[Date] = mapped_column(Date, nullable=False)
 
-    endereco = relationship("EnderecoModel", back_populates="clientes")
-    telefone = relationship("TelefoneModel", back_populates="clientes")
+    contas: Mapped[list["ContaModel"]] = relationship(
+        "ContaModel", back_populates="cliente", cascade="all, delete-orphan")
+    endereco: Mapped["EnderecoModel"] = relationship(
+        "EnderecoModel", back_populates="cliente")
+    telefone: Mapped[list["TelefoneModel"]] = relationship(
+        "TelefoneModel", back_populates="cliente", cascade="all, delete-orphan")
 
 
 class TipoNumeroEnum(str, enum.Enum):
@@ -43,7 +48,7 @@ class EnderecoModel(Base):
     cep: Mapped[str] = mapped_column(String(8), nullable=False)
     num: Mapped[str] = mapped_column(String(10), nullable=False)
 
-    cliente = relationship("ClienteModel", back_populates="enderecos")
+    cliente = relationship("ClienteModel", back_populates="endereco")
 
 
 class TelefoneModel(Base):
@@ -56,4 +61,4 @@ class TelefoneModel(Base):
     tipo: Mapped[TipoNumeroEnum] = mapped_column(
         SQLEnum(TipoNumeroEnum), nullable=False, default=TipoNumeroEnum.CELULAR)
 
-    cliente = relationship("ClienteModel", back_populates="telefones")
+    cliente = relationship("ClienteModel", back_populates="telefone")
