@@ -5,6 +5,8 @@ from src.modules.pix.service import (
     PixService,
     SaldoInsuficienteException,
     ContaNaoEncontradaException,
+    ChavePixDuplicadaException,
+    ValidaChavePixException
 )
 from src.modules.pix.schema import (
     PixTransferInput,
@@ -51,19 +53,29 @@ def create_pix_key(payload: PixKeyCreateInput, db: Session = Depends(get_db)):
         new_key = service.register_pix_key(
             id_conta=payload.id_conta,
             key_type=payload.tipo_chave,
-            valor_chave=getattr(payload, 'valor_chave', None)
+            valor_chave=payload.valor_chave
         )
+
         return {
             "message": "Chave Pix Cadastrada com sucesso!",
             "id_chave": new_key.id_chave,
             "valor_chave": new_key.valor_chave
         }
+    
+    except ChavePixDuplicadaException as e:
+        # 409 Conflict: O recurso que você tentou criar já existe
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
     except ContaNaoEncontradaException as e:
+        # 404 Not Found
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
-    except ValueError as e:
+    except ValidaChavePixException as e:
+        # 400 Bad Request
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)

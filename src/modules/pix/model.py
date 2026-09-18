@@ -1,4 +1,5 @@
 import enum
+from datetime import datetime, timezone
 from sqlalchemy import Integer, String, Enum as SQLEnum, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
@@ -22,7 +23,7 @@ class ChavePixModel(Base):
         SQLEnum(TipoChavePixEnum), nullable=False)
     valor_chave: Mapped[str] = mapped_column(
         String(255), unique=True, nullable=False, index=True)
-    created_at: Mapped[DateTime] = mapped_column(
-        'criado_em', DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+            DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     conta = relationship("ContaModel", back_populates="chaves_pix")

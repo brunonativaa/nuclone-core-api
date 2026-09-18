@@ -15,7 +15,9 @@ class PixKeyCreateInput(BaseDTO):
     valor_chave: str = Field(
         ..., min_length=3, max_length=140, description="Valor da chave Pix"
     )
-
+    created_at: Optional[str] = Field(
+        default=None, description="Data e hora de criação da chave Pix"
+    )
 
 class PixCreatedResponse(BaseDTO):
     message: str = Field(
