@@ -12,6 +12,7 @@ class TipoChavePixEnum(str, enum.Enum):
     ALEATORIA = "ALEATORIA"
 
 
+
 class ChavePixModel(Base):
     __tablename__ = "chaves_pix"
 

@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 
-class RegistrarAuthRequest(BaseModel):
+class RegistrarAuthSchema(BaseModel):
     """Payload enviado no momento do cadastro inicial do usuário"""
     id_cliente: int
     senha: str = Field(..., min_length=8,
@@ -11,18 +11,18 @@ class RegistrarAuthRequest(BaseModel):
         None, pattern=r'^\d{4}$', description="PIN de transação do app")
 
 
-class LoginRequest(BaseModel):
+class LoginSchema(BaseModel):
     """Payload para autenticação e geração do Bearer Token"""
     cpf: str = Field(..., pattern=r'^\d{11}$', description="CPF do cliente")
     senha: str
 
 
-class PinVerificationRequest(BaseModel):
+class PinVerificationSchema(BaseModel):
     """Payload para assinar e autorizar transações Pix ou saques"""
     pin_transacao: str = Field(...,
                                pattern=r'^\d{4}$', description="PIN de transação do app")
 
 
-class TokenResponse(BaseModel):
+class TokenSchema(BaseModel):
     access_token: str
     token_type: str = "bearer"

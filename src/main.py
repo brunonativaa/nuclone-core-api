@@ -1,5 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 
 from src.core.database import Base, engine
 from src.modules.pix.model import ChavePixModel, TipoChavePixEnum
@@ -9,14 +11,20 @@ from src.modules.customer.model import ClienteModel, EnderecoModel, TelefoneMode
 from src.modules.customer.router import router as cliente_router
 from src.modules.account.router import router as account_router
 from src.modules.pix.router import router as pix_router
+from src.modules.auth.router import router as auth_router
+from src.modules.ledger.router import router as ledger_router
+from src.modules.limits.router import router as limits_router
+
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Executado na inicialização da aplicação
     Base.metadata.create_all(bind=engine)
+    print("Iniciando serviços da API Bancária...")
     yield
     # Código de encerramento (se necessário)
+    print("Encerrando serviços com segurança...")
 
 
 app = FastAPI(
@@ -29,6 +37,9 @@ app = FastAPI(
 app.include_router(cliente_router, prefix="/api/v1/customers")
 app.include_router(account_router, prefix="/api/v1/accounts")
 app.include_router(pix_router, prefix="/api/v1/pix")
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(ledger_router, prefix="/api/v1")
+app.include_router(limits_router, prefix="/api/v1")
 
 
 @app.get("/", tags=["Health Check"])
