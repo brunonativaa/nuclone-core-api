@@ -13,7 +13,7 @@ from src.modules.account.schema import (
 router = APIRouter(tags=["Accounts"])
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, response_model=AccountCreatedResponse)
+@router.post("",response_model=AccountCreatedResponse,  status_code=status.HTTP_201_CREATED,)
 def create_account(payload: AccountCreateInput, db: Session = Depends(get_db)):
     service = ContaService(db)
     try:

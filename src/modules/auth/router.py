@@ -3,24 +3,32 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from src.core.database import get_db
-from src.core.security import verify_password, create_access_token
-from src.modules.auth.schema import LoginSchema, TokenSchema
+from src.core.security import create_access_token, verify_password
+from src.modules.auth.schema import TokenSchema
+
+router = APIRouter(tags=["Auth"])
 
 
-router =  APIRouter()
-
+@router.post("/auth/login", response_model=TokenSchema, status_code=status.HTTP_200_OK)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    # 1. Consulta o usuário/conta no banco (exemplo conceitual)
-    # user = user_repository.get_by_cpf(form_data.username)
-    # if not user or not verify_password(form_data.password, user.senha_hash):
-    #     raise HTTPException(status_code=401, detail="Credenciais inválidas.")
+    """
+    Endpoint OAuth2 compatível com o Swagger UI e clientes HTTP.
+    Recebe os campos 'username' e 'password' via Form Data.
+    """
+    # Exemplo de validação local para testes de integração
+    # Em produção: buscar usuário pelo CPF/E-mail no banco e comparar hash
+    if form_data.username != "admin" or form_data.password != "123456":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciais inválidas.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    # Simulação de ID localizado
-    id_conta_autenticada = 1 
+    # Injeta o identificador da conta no claim 'sub' do JWT
+    id_conta = 1
+    access_token = create_access_token(data={"sub": str(id_conta)})
 
-    # 2. Emite o JWT injetando o ID na claim 'sub'
-    access_token = create_access_token(data={"sub": str(id_conta_autenticada)})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return TokenSchema(access_token=access_token, token_type="bearer")

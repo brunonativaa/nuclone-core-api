@@ -15,6 +15,8 @@ class AccountCreateInput(BaseDTO):
 
 class AccountOutput(BaseDTO):
 
+    model_config = ConfigDict(from_attributes=True)
+
     id_conta: int = Field(..., description="Indentificador único da conta")
     id_cliente: int = Field(..., description="ID do cliente proprietário")
     num_conta: str = Field(..., description="Número da conta corrente")

@@ -31,7 +31,18 @@ app = FastAPI(
     title="Nuclone Core API",
     description="API de serviços financeiros e transferências bancárias",
     version="1.0.0",
-    lifespan=lifespan,
+    openapi_url="/api/v1/openapi.json",
+    docs_url="/docs",
+    lifespan=lifespan
+
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Em produção, restringir para os domínios permitidos
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(cliente_router, prefix="/api/v1/customers")

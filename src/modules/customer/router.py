@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from src.core.database import get_db
 from src.modules.customer.service import ClienteService, ClienteJaExisteException, ClienteNaoEncontradoException
-from src.modules.customer.schema import ClienteCreateInput
+from src.modules.customer.schema import ClienteCreateInput, ClienteResponse
 
 router = APIRouter(tags=["Clientes"])
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("",response_model=ClienteResponse, status_code=status.HTTP_201_CREATED)
 def create_customer(cliente: ClienteCreateInput, db: Session = Depends(get_db)):
     service = ClienteService(db)
 

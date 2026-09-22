@@ -24,7 +24,7 @@ class ContaService:
     def _gerar_num_conta(self) -> str:
         return str(random.randint(100000, 999999))
 
-    def create_account(self, data_conta) -> ContaModel:
+    def create_account(self, data_conta) -> dict:
         # Conversão polimórfica: aceita Pydantic DTO ou dict
         payload = (
             data_conta.model_dump()
@@ -52,7 +52,12 @@ class ContaService:
             self.conta_repo.create_saldo(nova_conta.id_conta)
 
             self.db.commit()
-            return nova_conta
+            self.db.refresh(nova_conta)
+
+            return {
+                "message": "Conta bancária criada com sucesso!",
+                "account": nova_conta
+            }
         except Exception as e:
             self.db.rollback()
             raise e
