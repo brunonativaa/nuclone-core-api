@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Optional, List
 from sqlalchemy import String, ForeignKey, Numeric, DateTime, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
-from src.modules.limits.models import LimiteContaModel
+from src.modules.limits.model import LimiteContaModel
 from src.modules.pix.model import ChavePixModel
 
 
 if TYPE_CHECKING:
-    from src.modules.limits.models import LimiteContaModel
+    from src.modules.limits.model import LimiteContaModel
     from src.modules.customer.model import ClienteModel
 
 

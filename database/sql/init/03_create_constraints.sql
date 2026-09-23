@@ -56,6 +56,7 @@ ALTER TABLE
 ADD
     CONSTRAINT chaves_pix_id_conta_fk FOREIGN KEY (id_conta) REFERENCES contas(id_conta) ON DELETE CASCADE;
 
+
 ALTER TABLE
     transacao
 ADD
@@ -65,3 +66,5 @@ ALTER TABLE
     transacao
 ADD
     CONSTRAINT transacao_id_conta_destino_fk FOREIGN key (id_conta_destino) REFERENCES contas(id_conta) ON DELETE CASCADE;
+
+

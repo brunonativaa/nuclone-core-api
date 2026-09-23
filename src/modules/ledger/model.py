@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 import enum
-from sqlalchemy import Integer, Numeric, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Integer, Numeric, DateTime, Boolean, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column
 from src.core.database import Base
 
@@ -38,3 +38,10 @@ class TransacaoModel(Base):
         SQLEnum(StatusTransacaoEnum,name="status_transacao"), default=StatusTransacaoEnum.CONCLUIDO, server_default=StatusTransacaoEnum.CONCLUIDO.value, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    is_noturno: Mapped[bool] = mapped_column(
+        Boolean, 
+        default=False, 
+        nullable=False, 
+        server_default="false", 
+        comment="Flag que indica se a transação ocorreu no período noturno (20h às 06h)"
+    )

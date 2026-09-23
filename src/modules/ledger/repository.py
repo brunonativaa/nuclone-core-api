@@ -1,9 +1,10 @@
 from decimal import Decimal
 from datetime import datetime
 from typing import List, Optional
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, or_
 from sqlalchemy.orm import Session
-from src.modules.ledger.models import TransacaoModel, StatusTransacaoEnum
+
+from src.modules.ledger.model import TransacaoModel, StatusTransacaoEnum
 
 
 class LedgerRepository:
@@ -14,27 +15,51 @@ class LedgerRepository:
         stmt = select(TransacaoModel).where(TransacaoModel.id_transacao == id_transacao)
         return self.db.scalars(stmt).first()
 
-    def get_extrato_by_conta(self, id_conta: int, limit: int, offset: int, data_inicio: Optional[datetime] = None, data_fim: Optional[datetime] = None) -> List[TransacaoModel]:
-        stmt = select(TransacaoModel).where(TransacaoModel.id_conta_origem == id_conta) | (TransacaoModel.id_conta_destino == id_conta) 
+    def get_extrato_by_conta(
+        self,
+        id_conta: int,
+        limit: int = 20,
+        offset: int = 0,
+        data_inicio: Optional[datetime] = None,
+        data_fim: Optional[datetime] = None
+        ) -> List[TransacaoModel]:
+        
+        stmt = select(TransacaoModel).where(
+            or_(
+                TransacaoModel.id_conta_origem == id_conta,
+                TransacaoModel.id_conta_destino == id_conta
+            ) 
+        )
+
         if data_inicio:
             stmt = stmt.where(TransacaoModel.created_at >= data_inicio)
         if data_fim:
             stmt = stmt.where(TransacaoModel.created_at <= data_fim)
+
         stmt = stmt.order_by(TransacaoModel.created_at.desc()).limit(limit).offset(offset)
 
         return list(self.db.scalars(stmt).all())
 
 
-    def get_total_gasto_janela(self, id_conta: int, inicio: datetime, fim: datetime) -> Decimal:
-        stmt = select(func.coalesce(func.sum(TransacaoModel.valor), 0)).where(
-            and_(
+    def get_total_gasto_janela(
+        self,
+        id_conta: int, 
+        inicio: datetime,
+        fim: datetime,
+        is_noturno: bool
+    ) -> Decimal:
+        
+        stmt = select(
+            func.coalesce(func.sum(TransacaoModel.valor), Decimal(0.00))
+            ).where(
                 TransacaoModel.id_conta_origem == id_conta,
                 TransacaoModel.status == StatusTransacaoEnum.CONCLUIDO, 
                 TransacaoModel.created_at >= inicio,
-                TransacaoModel.created_at <= fim   
+                TransacaoModel.created_at <= fim,
+                TransacaoModel.is_noturno == is_noturno   
                     )
-            )
-        return Decimal(self.db.scalar(stmt))
+        resultado = self.db.scalar(stmt)
+        return Decimal(resultado if resultado is not None else 0)
 
 
 

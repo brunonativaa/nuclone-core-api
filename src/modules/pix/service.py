@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Optional
 from sqlalchemy.exc import IntegrityError
 
-from src.modules.ledger.models import TransacaoModel, TipoTransacaoEnum
+from src.modules.ledger.model import TransacaoModel, TipoTransacaoEnum
 from src.modules.account.repository import ContaRepository
 from src.modules.pix.repository import PixRepository
 from src.modules.pix.model import ChavePixModel

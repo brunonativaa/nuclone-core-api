@@ -62,8 +62,8 @@ CREATE TABLE IF NOT EXISTS chaves_pix (
     id_conta INT NOT NULL,
     tipo_chave tipo_chave_pix NOT NULL,
     valor_chave VARCHAR(255) NOT NULL UNIQUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_chaves_pix_conta FOREIGN KEY (id_conta) REFERENCES contas(id_conta) ON DELETE CASCADE
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+   
 );
 
 CREATE TABLE transacao (
@@ -73,11 +73,7 @@ CREATE TABLE transacao (
     tipo_transacao tipo_de_transacao NOT NULL DEFAULT 'PIX',
     valor DECIMAL (15, 2) NOT NULL CHECK (valor > 0.00),
     status tipo_de_status NOT NULL DEFAULT 'CONCLUIDO',
+    is_noturno BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_transacao_origem_data ON transacao(id_conta_origem, created_at DESC);
-
-CREATE INDEX idx_transacao_destino_data ON transacao(id_conta_destino, created_at DESC);
-
-CREATE INDEX idx_chaves_pix_valor ON chaves_pix(valor_chave);

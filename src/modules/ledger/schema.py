@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from decimal import Decimal
-from src.modules.ledger.models import TipoTransacaoEnum
+from src.modules.ledger.model import TipoTransacaoEnum
 from pydantic import BaseModel, Field
 
 class TransactionResponseSchema(BaseModel):
