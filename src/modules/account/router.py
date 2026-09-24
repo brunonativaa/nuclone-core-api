@@ -7,20 +7,26 @@ from src.modules.account.service import (
 from src.modules.account.schema import (
     AccountCreateInput,
     AccountCreatedResponse,
-    AccountBalanceOutput
+    AccountBalanceOutput,
+    AccountOutput
 )
 
-router = APIRouter(tags=["Accounts"])
+router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
 
 @router.post("",response_model=AccountCreatedResponse,  status_code=status.HTTP_201_CREATED,)
 def create_account(payload: AccountCreateInput, db: Session = Depends(get_db)):
     service = ContaService(db)
     try:
-        new_account = service.create_account(payload.model_dump())
+        # 1. Executa a regra de negócio na camada de serviço
+        new_account = service.create_account(payload)
+
+        # Converte a model do SQLAlchemy para o Schema Pydantic explicitamente
+        account_dto = AccountOutput.model_validate(new_account)
+
         return {
             "message": "Conta bancária criada com sucesso!",
-            "account": new_account
+            "account": account_dto
         }
     except ClienteNaoEncontradoException as e:
         raise HTTPException(

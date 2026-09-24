@@ -1,6 +1,6 @@
 from decimal import Decimal
 from typing import Optional
-from sqlalchemy import or_
+from sqlalchemy import select, or_
 from sqlalchemy.orm import Session
 from src.modules.account.model import ContaModel,  SaldoContaModel
 from src.modules.customer.model import ClienteModel, TelefoneModel
@@ -33,19 +33,19 @@ class PixRepository:
             valor_chave=valor_chave
         )
         self.db.add(nova_chave)
-        self.db.flush()  # Flush para obter o ID da chave PIX gerada
+        self.db.flush() # Flush para obter o ID da chave PIX gerada na transação ativa
         return nova_chave
 
     
 
     def search_account_by_key(self, chave_pix: str) -> Optional[ContaModel]:
         """Busca a conta associada a uma chave PIX, CPF, e-mail ou telefone."""
-        return (
-            self.db.query(ContaModel)
+        stmt = (
+            select(ContaModel)
             .join(ChavePixModel, ContaModel.id_conta == ChavePixModel.id_conta)
             .join(ClienteModel, ContaModel.id_cliente == ClienteModel.id_cliente)
             .outerjoin(TelefoneModel, ClienteModel.id_cliente == TelefoneModel.id_cliente)
-            .filter(
+            .where(
                 or_(
                     ChavePixModel.valor_chave == chave_pix,
                     ClienteModel.cpf == chave_pix,
@@ -53,18 +53,17 @@ class PixRepository:
                     TelefoneModel.numero == chave_pix
                 )
             )
-            .first()
         )
+        return self.db.scalar(stmt)
 
-    def update_saldo(self, id_conta, valor):
-        saldo = self.db.query(SaldoContaModel).filter_by(
-            id_conta=id_conta).first()
+    def update_saldo(self, id_conta: int, valor: Decimal | str | float) -> Optional[SaldoContaModel]:
+        stmt = select(SaldoContaModel).where(SaldoContaModel.id_conta == id_conta)
+        saldo = self.db.scalar(stmt)
 
         if not saldo:
             return None
 
         saldo.saldo_disponivel += Decimal(str(valor))
-
         self.db.add(saldo)
         return saldo
 
@@ -73,12 +72,13 @@ class PixRepository:
         Aplica Pessimistic Locking (FOR UPDATE) para evitar race conditions
         e garante que o saldo seja suficiente antes de debitar.
         """
-        saldo = (
-            self.db.query(SaldoContaModel)
-            .filter_by(id_conta=id_conta)
-            .with_for_update()  # Bloqueia a linha para esta transação
-            .first()
+        stmt = (
+            select(SaldoContaModel)
+            .where(SaldoContaModel.id_conta == id_conta)
+            .with_for_update()  # Executa SELECT ... FOR UPDATE no PostgreSQL
         )
+
+        saldo = self.db.scalar(stmt)
 
         if not saldo or saldo.saldo_disponivel < valor:
             return False    
@@ -87,11 +87,11 @@ class PixRepository:
         self.db.add(saldo)
         return True
 
-    def credit(self, id_conta, valor):
+    def credit(self, id_conta: int, valor: Decimal | str | float) -> Optional[SaldoContaModel]:
         # Passa o valor positivo para somar
         return self.update_saldo(id_conta, Decimal(str(valor)))
 
-    def record_transaction(self, data: dict):
+    def record_transaction(self, data: dict) -> TransacaoModel:
         transacao = TransacaoModel(
             id_conta_origem=data["id_conta_origem"],
             id_conta_destino=data["id_conta_destino"],
@@ -100,5 +100,4 @@ class PixRepository:
         )
         self.db.add(transacao)
         self.db.flush()
-
         return transacao

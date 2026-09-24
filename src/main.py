@@ -46,7 +46,7 @@ app.add_middleware(
 )
 
 app.include_router(cliente_router, prefix="/api/v1/customers")
-app.include_router(account_router, prefix="/api/v1/accounts")
+app.include_router(account_router, prefix="/api/v1")
 app.include_router(pix_router, prefix="/api/v1/pix")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(ledger_router, prefix="/api/v1")

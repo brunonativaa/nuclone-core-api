@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, joinedload
 from src.modules.account.model import ContaModel, SaldoContaModel
 
 
@@ -23,16 +24,14 @@ class ContaRepository:
         self.db.flush()
         return saldo
 
-    def get_saldo(self, id_conta: int) -> Optional[SaldoContaModel]:
-        return (
-            self.db.query(SaldoContaModel)
-            .filter(SaldoContaModel.id_conta == id_conta)
-            .first()
-        )
+    def get_saldo(self, id_conta: int) -> Optional[ContaModel]:
+        stmt = ( 
+            select(ContaModel)
+            .options(joinedload(ContaModel.saldo))
+            .where(ContaModel.id == id_conta)
+        )   
+        return self.db.scalar(stmt)
 
     def search_account(self, id_conta: int) -> Optional[ContaModel]:
-        return (
-            self.db.query(ContaModel)
-            .filter(ContaModel.id_conta == id_conta)
-            .first()
-        )
+
+        return self.db.get(ContaModel, id_conta)

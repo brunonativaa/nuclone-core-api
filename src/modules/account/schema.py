@@ -1,10 +1,12 @@
 from pydantic import BaseModel, ConfigDict, Field
 from src.core.schema import BaseDTO
 from decimal import Decimal
-from datetime import datetime
+
 
 
 class AccountCreateInput(BaseDTO):
+    model_config = ConfigDict(from_attributes=True)
+
     id_cliente: int = Field(...,
                             description="ID do cliente proprietário da conta")
     tipo_conta: str = Field(default="PF", min_length=2,
@@ -25,11 +27,15 @@ class AccountOutput(BaseDTO):
 
 
 class AccountCreatedResponse(BaseDTO):
+    model_config = ConfigDict(from_attributes=True)
+
     message: str = Field(..., description="Mensagem de confirmação")
     account: AccountOutput
 
 
-class AccountBalanceOutput(BaseModel):
+class AccountBalanceOutput(BaseDTO):
+    model_config = ConfigDict(from_attributes=True)
+
     id_conta: int = Field(..., description="Indentificador único da conta")
     saldo_disponivel: Decimal = Field(...,
                                       description="Saldo dispoivel para transação")
