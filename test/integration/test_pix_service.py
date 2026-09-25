@@ -1,6 +1,5 @@
 import pytest
 from decimal import Decimal
-from src.modules.account.model import ContaModel
 from src.modules.pix.service import (
     PixService,
     SaldoInsuficienteException,

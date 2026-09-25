@@ -11,7 +11,8 @@ def test_create_customer_success(client):
         "cpf": fake.cpf().replace(".", "").replace("-", ""),
         "sexo": "M",
         "email": fake.email(),
-        "senha": "senha145",
+        "senha_hash": "senha145",
+        "pin_transacao_hash": "1234",
         "data_nascimento": "2002-04-07"
     }
 

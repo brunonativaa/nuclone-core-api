@@ -24,13 +24,14 @@ class ContaRepository:
         self.db.flush()
         return saldo
 
-    def get_saldo(self, id_conta: int) -> Optional[ContaModel]:
+    def get_saldo(self, id_conta: int) -> Optional[SaldoContaModel]:
         stmt = ( 
             select(ContaModel)
             .options(joinedload(ContaModel.saldo))
-            .where(ContaModel.id == id_conta)
+            .where(ContaModel.id_conta == id_conta)
         )   
-        return self.db.scalar(stmt)
+        conta = self.db.scalar(stmt)
+        return conta.saldo if conta else None
 
     def search_account(self, id_conta: int) -> Optional[ContaModel]:
 

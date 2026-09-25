@@ -1,35 +1,52 @@
-import datetime
+import os 
+
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+
+
+from datetime import date, datetime, timezone
 import uuid
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from src.main import app
-# Importa diretamente a instância do engine do core do projeto
-from src.core.database import engine, SessionLocal, get_db, Base
+from src.core.database import get_db, Base
 from src.modules.account.model import ContaModel, SaldoContaModel
 from src.modules.customer.model import ClienteModel
-from src.modules.pix.model import KeyPixModel
+from src.modules.pix.model import ChavePixModel
 
 
-@pytest.fixture(scope="session")
+# -----------------------------------------------------------------------------
+# Configuração do Banco de Dados SQLite em Memória para Testes
+# -----------------------------------------------------------------------------
+
+TEST_DATABASE_URL = "sqlite:///:memory:"
+
+# StaticPool e check_same_thread=False mantêm a mesma conexão em memória para o ciclo do teste
+test_engine = create_engine(
+    TEST_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool
+)
+
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
+@pytest.fixture(scope="session", autouse=True)
 def setup_db():
-    """Cria as tabelas apenas quando o banco for realmente necessário."""
-    Base.metadata.create_all(bind=engine)
+    """Cria as tabelas em memória no início do suite e descarta ao final."""
+    Base.metadata.create_all(bind=test_engine)
     yield
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(bind=test_engine)
 
 
 @pytest.fixture(scope="function")
-def db_session(setup_db):  # Passa o setup_db como dependência aqui
-    connection = engine.connect()
+def db_session():  
+    """Fornece uma sessão isolada com suporte a rollback por teste."""
+    connection = test_engine.connect()
     transaction = connection.begin()
-    session = SessionLocal(bind=connection)
-
-    session.begin_nested()
-
-    @pytest.hookimpl(tryfirst=True)
-    def on_rollback():
-        session.begin_nested()
+    session = TestingSessionLocal(bind=connection)
 
     yield session
 
@@ -38,8 +55,10 @@ def db_session(setup_db):  # Passa o setup_db como dependência aqui
     connection.close()
 
 
+
 @pytest.fixture
 def client(db_session):
+    """Substitui a dependência get_db do FastAPI pela sessão de testes."""
     def _override_get_db():
         yield db_session
 
@@ -48,10 +67,13 @@ def client(db_session):
         yield c
     app.dependency_overrides.clear()
 
+# -----------------------------------------------------------------------------
+# Fixtures de Dados de Teste (Massa de Dados)
+# -----------------------------------------------------------------------------
 
 @pytest.fixture
 def chave_pix_destino(db_session, id_conta_destino):
-    chave = KeyPixModel(
+    chave = ChavePixModel(
         id_conta=id_conta_destino,
         tipo_chave="EMAIL",
         valor_chave="destino@email.com"
@@ -63,7 +85,7 @@ def chave_pix_destino(db_session, id_conta_destino):
 
 @pytest.fixture
 def chave_pix_origem(db_session, id_conta_origem):
-    chave = KeyPixModel(
+    chave = ChavePixModel(
         id_conta=id_conta_origem,
         tipo_chave="EMAIL",
         valor_chave="origem@email.com"
@@ -80,9 +102,10 @@ def valid_customer_data():
         "nome": f"Bruno Teste {uid}",
         "cpf": str(uuid.uuid4().int)[:11].zfill(11),
         "email": f"pytest_{uid}@email.com",
-        "senha": "senha_segura_test",
+        "senha_hash": "senha_segura_test",
+        "pin_transacao_hash": "1234",
         "sexo": "M",
-        "data_nascimento": "1997-08-15",
+        "data_nascimento": date(1997, 8, 15)
     }
 
 
@@ -106,7 +129,7 @@ def id_conta_origem(db_session, valid_customer_data):
         id_conta=conta.id_conta,
         saldo_disponivel=100.00,
         saldo_bloqueado=0.00,
-        ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
+        ultima_atualizacao=datetime.now(timezone.utc)
     )
     db_session.add(saldo)
     db_session.flush()
@@ -115,15 +138,16 @@ def id_conta_origem(db_session, valid_customer_data):
 
 
 @pytest.fixture
-def id_conta_destino(db_session):
+def id_conta_destino(db_session, id_cliente_destino):
     uid = str(uuid.uuid4())[:8]
     dados_destino = {
         "nome": "Cliente Destino Teste",
         "cpf": f"{uuid.uuid4().int}"[:11],
         "email": f"destino_{uid}@email.com",
-        "senha": "senha_segura_test",
+        "senha_hash": "senha_segura_test",
+        "pin_transacao_hash": "1234",
         "sexo": "F",
-        "data_nascimento": "1998-01-01"
+        "data_nascimento": date(1998, 1, 1)
     }
     cliente = ClienteModel(**dados_destino)
     db_session.add(cliente)
@@ -140,11 +164,33 @@ def id_conta_destino(db_session):
 
     saldo = SaldoContaModel(
         id_conta=conta.id_conta,
-        saldo_disponivel=0,
-        saldo_bloqueado=0,
-        ultima_atualizacao=datetime.datetime.now(datetime.timezone.utc)
+        saldo_disponivel=0.00,
+        saldo_bloqueado=0.00,
+        ultima_atualizacao=datetime.now(timezone.utc)
     )
     db_session.add(saldo)
     db_session.flush()
 
     return conta.id_conta
+
+@pytest.fixture
+def chave_pix_origem(db_session, id_conta_origem):
+    chave = ChavePixModel(
+        id_conta=id_conta_origem,
+        tipo_chave="EMAIL",
+        valor_chave="origem@email.com"
+    )
+    db_session.add(chave)
+    db_session.flush()
+    return chave.valor_chave
+
+@pytest.fixture
+def chave_pix_destino(db_session, id_conta_destino):
+    chave = ChavePixModel(
+        id_conta=id_conta_destino,
+        tipo_chave="EMAIL",
+        valor_chave="destino@email.com"
+    )
+    db_session.add(chave)
+    db_session.flush()
+    return chave.valor_chave
