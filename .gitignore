@@ -55,3 +55,4 @@ build/
 
 .env.coverage
 .coverage
+.env
