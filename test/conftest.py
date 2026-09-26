@@ -6,6 +6,7 @@ os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 from datetime import date, datetime, timezone
 import uuid
 import pytest
+import sqlalchemy
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -47,6 +48,13 @@ def db_session():
     connection = test_engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
+    nested = connection.begin_nested()
+
+    @sqlalchemy.event.listens_for(session, "after_transaction_end")
+    def restart_savepoint(session, transaction):
+        nonlocal nested
+        if not nested.is_active:
+            nested = connection.begin_nested()
 
     yield session
 
@@ -138,7 +146,7 @@ def id_conta_origem(db_session, valid_customer_data):
 
 
 @pytest.fixture
-def id_conta_destino(db_session, id_cliente_destino):
+def id_conta_destino(db_session):
     uid = str(uuid.uuid4())[:8]
     dados_destino = {
         "nome": "Cliente Destino Teste",

@@ -17,7 +17,7 @@ class TransactionResponseSchema(BaseModel):
 class ExtratoQuerySchema(BaseModel):
     data_inicio: Optional[datetime] = None
     data_fim: Optional[datetime] = None
-    limit: int = Field(defaut=20, ge=1, le=100)
+    limit: int = Field(default=20, ge=1, le=100)
     offset: int = Field(default=0, ge=0)
 
     

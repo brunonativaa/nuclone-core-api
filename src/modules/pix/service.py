@@ -122,11 +122,11 @@ class PixService:
             raise ValueError("Não é possível realizar transferência PIX para a mesma conta.")
 
         # 3. Transação Atômica com Concorrência Tratada
+        debito_sucesso = self.pix_repo.debit_with_lock(id_conta_origem, valor_decimal)
+        if not debito_sucesso:
+            raise SaldoInsuficienteException("Saldo insuficiente para realizar o PIX.")
+        
         try:
-            debito_sucesso = self.pix_repo.debit_with_lock(id_conta_origem, valor_decimal)
-            if not debito_sucesso:
-                raise SaldoInsuficienteException("Saldo insuficiente para realizar o PIX.")
-
             self.pix_repo.credit(id_conta_destino, valor_decimal)
 
             dados_transacao = self.pix_repo.record_transaction({

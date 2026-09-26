@@ -1,5 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
+from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 from src.modules.account.model import ContaModel, SaldoContaModel
@@ -25,14 +26,24 @@ class ContaRepository:
         return saldo
 
     def get_saldo(self, id_conta: int) -> Optional[SaldoContaModel]:
-        stmt = ( 
-            select(ContaModel)
-            .options(joinedload(ContaModel.saldo))
-            .where(ContaModel.id_conta == id_conta)
-        )   
-        conta = self.db.scalar(stmt)
-        return conta.saldo if conta else None
+        stmt = select(SaldoContaModel).where(SaldoContaModel.id_conta == id_conta)
+        saldo = self.db.scalar(stmt)
+    
+    # Se o saldo não for encontrado no banco mas a conta existir, inicializa com 0.00
+        if saldo is None:
+            conta = self.search_account(id_conta)
+            if conta:
+                saldo = SaldoContaModel(
+                    id_conta=id_conta,
+                    saldo_disponivel=0.00,
+                    saldo_bloqueado=0.00,
+                    ultima_atualizacao=datetime.now(timezone.utc)
+            )
+                self.db.add(saldo)
+                self.db.commit()
 
+        return saldo
+    
     def search_account(self, id_conta: int) -> Optional[ContaModel]:
 
         return self.db.get(ContaModel, id_conta)
