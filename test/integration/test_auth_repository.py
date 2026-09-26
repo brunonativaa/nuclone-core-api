@@ -1,8 +1,35 @@
-from datetime import date
+import pytest
 import uuid
+
+from fastapi.testclient import TestClient
+from datetime import date
 from src.modules.auth.repository import AuthRepository
 from src.modules.customer.model import ClienteModel
 from src.modules.account.model import ContaModel
+
+
+
+def test_login_sucesso(client: TestClient):
+    # Envia credenciais corretas via form-data para cobrir linhas 31-34
+    response = client.post(
+        "/api/v1/auth/login",
+        data={"username": "admin", "password": "123456"}
+    )
+    
+    assert response.status_code == 200
+    json_data = response.json()
+    assert "access_token" in json_data
+    assert json_data["token_type"] == "bearer"
+
+def test_login_credenciais_invalidas(client: TestClient):
+    # Envia credenciais erradas para disparar a HTTPException das linhas 23-28
+    response = client.post(
+        "/api/v1/auth/login",
+        data={"username": "usuario_errado", "password": "senha_errada"}
+    )
+    
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Credenciais inválidas."
 
 
 def test_auth_repository_get_cliente_by_email(db_session):

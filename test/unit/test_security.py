@@ -20,7 +20,7 @@ def test_verify_password_success_and_failure():
     assert verify_password("SenhaErrada", hashed) is False
 
 
-def test_create_acess_token_custom_expire():
+def test_create_acess_token_with_custom_expire():
     data = {"sub": "123"}
     expires_delta = timedelta(minutes=15)
     token = create_access_token(data=data, expires_delta=expires_delta)
@@ -28,6 +28,13 @@ def test_create_acess_token_custom_expire():
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     assert payload.get("sub") == "123"
     assert "exp" in payload
+
+def test_create_access_token_default_expires():
+    data = {"sub": "456"}
+    token = create_access_token(data=data)
+    
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    assert payload.get("sub") == "456"
 
 def test_get_current_user_id_success():
     token = create_access_token(data={"sub": "42"})

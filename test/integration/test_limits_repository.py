@@ -1,7 +1,7 @@
 from src.modules.limits.repository import LimitesRepository
 from src.modules.limits.model import LimiteContaModel
 
-def test_limits_repository_get_by_conta_and_update(db_session):
+def test_limits_repository_get_by_account_and_update(db_session):
     repo = LimitesRepository(db_session)
     id_conta_teste = 101
 
