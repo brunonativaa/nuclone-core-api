@@ -55,16 +55,10 @@ build/
 
 .env.coverage
 .coverage
-<<<<<<< Updated upstream
-
-# =============================
-# Relatórios
-=======
 .env
+.coveragerc
 
-# =============================
 # Relatorios 
->>>>>>> Stashed changes
 # =============================
 
 relatorio.html
