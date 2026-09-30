@@ -55,9 +55,16 @@ build/
 
 .env.coverage
 .coverage
+<<<<<<< Updated upstream
 
 # =============================
 # Relatórios
+=======
+.env
+
+# =============================
+# Relatorios 
+>>>>>>> Stashed changes
 # =============================
 
 relatorio.html
