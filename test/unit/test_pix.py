@@ -33,10 +33,11 @@ def setup_two_accounts_with_balance(db_session, valid_customer_data):
     random_cpf = f"{random.randint(100, 999)}.{random.randint(100, 999)}.{random.randint(100, 999)}-00"
     customer2_data = {
         "nome": f"Bruno Typer2026",
-        "cpf": random_cpf,  # Exatamente 11 dígitos
+        "cpf": random_cpf,  
+        "sexo": "F",  
         "email": f"receiver_{random_id}@email.com",
-        "senha": "secure_password_test",
-        "sexo": "F",
+        "senha_hash": "secure_password_test",
+        "pin_transacao_hash": "123456",
         "data_nascimento": "1995-05-20"
     }
     customer2 = customer_service.create_customer(customer2_data)

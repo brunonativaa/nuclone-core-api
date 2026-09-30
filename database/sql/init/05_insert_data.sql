@@ -1,6 +1,14 @@
 -- 1. Inserindo Clientes (Carlos e Mariana)
 INSERT INTO
-    cliente (nome, cpf, sexo, email, senha, data_nascimento)
+    clientes (
+        nome,
+        cpf,
+        sexo,
+        email,
+        senha_hash,
+        pin_transacao_hash,
+        data_nascimento
+    )
 VALUES
     (
         'Carlos Souza',
@@ -8,6 +16,7 @@ VALUES
         'M',
         'carlos@nuclone.com',
         'hash_senha_1',
+        'hash_pin_1',
         '1990-04-12'
     ),
     (
@@ -16,19 +25,20 @@ VALUES
         'F',
         'mariana@nuclone.com',
         'hash_senha_2',
+        'hash_pin_2',
         '1998-09-21'
     );
 
 -- 2. Inserindo Telefones
 INSERT INTO
-    telefone (id_cliente, numero, tipo)
+    telefones (id_cliente, numero, tipo)
 VALUES
     (
         (
             SELECT
                 id_cliente
             FROM
-                cliente
+                clientes
             WHERE
                 cpf = '11122233344'
         ),
@@ -40,7 +50,7 @@ VALUES
             SELECT
                 id_cliente
             FROM
-                cliente
+                clientes
             WHERE
                 cpf = '55566677788'
         ),
@@ -50,7 +60,7 @@ VALUES
 
 -- 3. Inserindo Endereços
 INSERT INTO
-    endereco (
+    enderecos (
         id_cliente,
         estado,
         cidade,
@@ -65,7 +75,7 @@ VALUES
             SELECT
                 id_cliente
             FROM
-                cliente
+                clientes
             WHERE
                 cpf = '11122233344'
         ),
@@ -81,7 +91,7 @@ VALUES
             SELECT
                 id_cliente
             FROM
-                cliente
+                clientes
             WHERE
                 cpf = '55566677788'
         ),
@@ -95,14 +105,14 @@ VALUES
 
 -- 4. Inserindo as Contas Bancárias
 INSERT INTO
-    conta (id_cliente, num_conta, tipo_conta, agencia)
+    contas (id_cliente, num_conta, tipo_conta, agencia)
 VALUES
     (
         (
             SELECT
                 id_cliente
             FROM
-                cliente
+                clientes
             WHERE
                 cpf = '11122233344'
         ),
@@ -115,7 +125,7 @@ VALUES
             SELECT
                 id_cliente
             FROM
-                cliente
+                clientes
             WHERE
                 cpf = '55566677788'
         ),
@@ -126,7 +136,7 @@ VALUES
 
 -- 5. Inicializando os Saldos das Contas (Buscando o id_conta pela num_conta)
 INSERT INTO
-    saldo_conta (
+    saldo_contas (
         id_conta,
         saldo_disponivel,
         saldo_bloqueado,
@@ -139,7 +149,7 @@ VALUES
             SELECT
                 id_conta
             FROM
-                conta
+                contas
             WHERE
                 num_conta = '00001234-5'
         ),
@@ -153,11 +163,11 @@ VALUES
             SELECT
                 id_conta
             FROM
-                conta
+                contas
             WHERE
                 num_conta = '00005678-9'
         ),
-        50.00,
+        5500.00,
         0.00,
         NOW()
     );

@@ -3,17 +3,6 @@ from fastapi.testclient import TestClient
 from src.main import app
 from src.core.database import get_db
 
-cliente = TestClient(app)
-
-
-@pytest.fixture(autouse=True)
-def override_db_dependency(db_session):
-
-    app.dependency_overrides[get_db] = lambda: db_session
-    yield
-    app.dependency_overrides.clear()
-
-# Helper para extrair o ID numérico caso a fixture retorne a model Conta ou um int
 
 
 def _get_id(conta_or_id) -> int:

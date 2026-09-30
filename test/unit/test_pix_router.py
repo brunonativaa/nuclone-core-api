@@ -6,6 +6,7 @@ from src.main import app
 from src.modules.pix.service import (
     ContaNaoEncontradaException,
     SaldoInsuficienteException,
+    ChavePixDuplicadaException
 )
 
 
@@ -35,7 +36,7 @@ def test_transfer_pix_success(mock_pix_service):
 
 
 @patch("src.modules.pix.router.PixService")
-def test_transfer_pix_conta_nao_encontrada(mock_pix_service):
+def test_transfer_pix_account_not_found(mock_pix_service):
     mock_service_instance = MagicMock()
     mock_pix_service.return_value = mock_service_instance
     mock_service_instance.make_pix_payment.side_effect = (
@@ -52,7 +53,7 @@ def test_transfer_pix_conta_nao_encontrada(mock_pix_service):
 
 
 @patch("src.modules.pix.router.PixService")
-def test_transfer_pix_saldo_insuficiente(mock_pix_service):
+def test_transfer_pix_insufficient_balance(mock_pix_service):
     mock_service_instance = MagicMock()
     mock_pix_service.return_value = mock_service_instance
     mock_service_instance.make_pix_payment.side_effect = (
@@ -111,7 +112,7 @@ def test_create_pix_key_success(mock_pix_service):
 
 
 @patch("src.modules.pix.router.PixService")
-def test_create_pix_key_conta_nao_encontrada(mock_pix_service):
+def test_create_pix_key_account_not_found(mock_pix_service):
     mock_service_instance = MagicMock()
     mock_pix_service.return_value = mock_service_instance
     mock_service_instance.register_pix_key.side_effect = (
@@ -131,10 +132,10 @@ def test_create_pix_key_conta_nao_encontrada(mock_pix_service):
 
 
 @patch("src.modules.pix.router.PixService")
-def test_create_pix_key_value_error(mock_pix_service):
+def test_create_pix_key_value_error(mock_pix_service, client):
     mock_service_instance = MagicMock()
     mock_pix_service.return_value = mock_service_instance
-    mock_service_instance.register_pix_key.side_effect = ValueError(
+    mock_service_instance.register_pix_key.side_effect = ChavePixDuplicadaException(
         "Chave Pix já cadastrada."
     )
 
@@ -146,5 +147,5 @@ def test_create_pix_key_value_error(mock_pix_service):
 
     response = client.post("/api/v1/pix/keys", json=payload)
 
-    assert response.status_code == 400
+    assert response.status_code == 409
     assert response.json()["detail"] == "Chave Pix já cadastrada."

@@ -34,7 +34,7 @@ class NucloneUser(HttpUser):
         self.client.get(f"/api/v1/accounts/{id_conta}")
 
     @task
-    def realizar_transferencia_pix(self):
+    def make_a_PIX_transfer(self):
         payload = {
             "id_conta_origem": 3,
             "chave_destino": "mariana@nuclone.com",

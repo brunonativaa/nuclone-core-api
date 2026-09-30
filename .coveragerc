@@ -1,0 +1,5 @@
+[run]
+omit =
+    src/core/config.py
+    src/modules/auth/model.py
+    */__init__.py
