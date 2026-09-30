@@ -1,5 +1,6 @@
 import re
-from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
+from datetime import date
+from pydantic import EmailStr, Field, field_validator, ConfigDict
 from src.core.schema import BaseDTO
 from typing import Optional
 
@@ -7,21 +8,20 @@ from typing import Optional
 class ClienteCreateInput(BaseDTO):
 
     model_config = ConfigDict(from_attributes=True)
-
-    nome: str = Field(..., min_length=3, max_length=60,
+    nome: str = Field(..., min_length=3, max_length=100,
                       description="Nome completo")
-
-    cpf:  str = Field(...,
+    cpf:  str = Field(..., min_length=11, max_length=14,
                       description="CPF sem pontos ou traços(apenas 11 digitos)")
-
-    email: EmailStr = Field(..., description="E-mail válido do cliente")
-
-    senha: str = Field(..., min_length=8,
-                       description="Senha de usuario (mínimo 8 caracteres)")
-
-    sexo: str = Field(..., min_length=1, max_length=1, description="M/F")
-
-    data_nascimento: str = Field(..., description="00/00/0000")
+    sexo: Optional[str] = Field(None, min_length=1, max_length=1,
+                                description="Sexo do cliente (M/F)")
+    email: EmailStr = Field(..., min_length=8, max_length=100,
+                            description="E-mail válido do cliente")
+    senha_hash: str = Field(..., min_length=8, max_length=60,
+                            description="Senha hash em texto puro para cadastro do cliente")
+    pin_transacao_hash: str = Field(..., min_length=4, max_length=6,
+                                    description="PIN de transação de 4 a 6 dígitos em texto puro para cadastro do cliente")
+    data_nascimento: date = Field(...,
+                                  description="Data de nascimento formato YYYY-MM-DD")
 
     @field_validator("cpf")
     @classmethod
@@ -34,12 +34,12 @@ class ClienteCreateInput(BaseDTO):
         return cpf_limpo
 
 
-class ClienteOutput(BaseDTO):
+class ClienteResponse(BaseDTO):
     id_cliente: int = Field(..., description="Indentificador único da conta")
-
     nome: str = Field(..., description="Nome do cliente")
-
     cpf: str = Field(...,
                      description="CPF sem pontos ou traços(apenas 11 digitos)")
-
     email: EmailStr = Field(..., description="E-mail válido do cliente")
+
+    class Config:
+        from_attributes = True
