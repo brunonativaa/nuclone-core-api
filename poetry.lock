@@ -1347,20 +1347,6 @@ MarkupSafe = ">=2.0"
 i18n = ["Babel (>=2.7)"]
 
 [[package]]
-name = "jose"
-version = "1.0.0"
-description = "An implementation of the JOSE draft"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "jose-1.0.0.tar.gz", hash = "sha256:8436c3617cd94e1ba97828fbb1ce27c129f66c78fb855b4bb47e122b5f345fba"},
-]
-
-[package.dependencies]
-pycrypto = ">=2.6"
-
-[[package]]
 name = "locust"
 version = "2.46.4"
 description = "Developer-friendly load testing framework"
@@ -1809,17 +1795,6 @@ files = [
     {file = "pycparser-3.0.tar.gz", hash = "sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29"},
 ]
 markers = {main = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", dev = "platform_python_implementation == \"CPython\" and sys_platform == \"win32\" and implementation_name != \"PyPy\" or implementation_name == \"pypy\""}
-
-[[package]]
-name = "pycrypto"
-version = "2.6.1"
-description = "Cryptographic modules for Python."
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "pycrypto-2.6.1.tar.gz", hash = "sha256:f2ce1e989b272cfcb677616763e0a2e7ec659effa67a88aa92b3a65528f60a3c"},
-]
 
 [[package]]
 name = "pycryptodome"
@@ -2768,4 +2743,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "430ad000c7c5e8129e0526231ca2f0d5f135aaae26be8451c94e93aee6d06ad9"
+content-hash = "e1a66b0e05a650e6396e03d616e63aa80917d6dd0824a4ab58eb032f70bda072"
