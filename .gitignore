@@ -2,10 +2,9 @@
 #  AMBIENTE PYTHON / POETRY
 # ============================
 .venv/
-__pycache__/
+**/__pycache__/
 *.pyc
-*.pyo
-*.pyd
+.pytest_cache/
 
 # Poetry
 poetry.lock
@@ -54,7 +53,9 @@ build/
 # =============================
 
 .env.coverage
+.env
 .coverage
+
 .env
 .coveragerc
 
