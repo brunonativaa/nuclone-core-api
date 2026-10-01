@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from decimal import Decimal
-from src.modules.ledger.model import TipoTransacaoEnum
+from src.modules.ledger.model import TipoTransacaoEnum, StatusTransacaoEnum
 from pydantic import BaseModel, Field
 
 class TransactionResponseSchema(BaseModel):
@@ -11,7 +11,7 @@ class TransactionResponseSchema(BaseModel):
     id_conta_destino: int
     tipo_transacao: TipoTransacaoEnum
     valor: Decimal = Field(..., gt=0, description="Valor da transação")
-    status: TipoTransacaoEnum
+    status: StatusTransacaoEnum
     created_at: datetime
 
 class ExtratoQuerySchema(BaseModel):
