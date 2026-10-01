@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.orm import Session
 
 from src.core.database import get_db
-from src.core.security import get_current_user_id
+from src.core.security import get_current_customer 
 from src.modules.ledger.schema import  TransactionResponseSchema 
 from src.modules.ledger.repository import LedgerRepository
 
@@ -15,7 +15,7 @@ router = APIRouter()
 def obter_extrato(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    id_conta: int = Depends(get_current_user_id),
+    id_conta: int = Depends(get_current_customer),
     db: Session = Depends(get_db)
 ):
     repo = LedgerRepository(db)
@@ -24,7 +24,7 @@ def obter_extrato(
 @router.get("/ledger/transacoes/{id_transacao}", response_model=TransactionResponseSchema, tags=["Ledger"])
 def obter_transacao(
     id_transacao: int,
-    id_conta: int = Depends(get_current_user_id),
+    id_conta: int = Depends(get_current_customer),
     db: Session = Depends(get_db)
 ):
     repo = LedgerRepository(db)

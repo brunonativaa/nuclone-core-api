@@ -19,13 +19,14 @@ from src.modules.limits.router import router as limits_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Executado na inicialização da aplicação
-    Base.metadata.create_all(bind=engine)
-    print("Iniciando serviços da API Bancária...")
-    yield
-    # Código de encerramento (se necessário)
+    # --- Startup: Executa o DDL de criação de tabelas de forma assíncrona ---
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    print("Banco de dados inicializado com sucesso!")
+    yield  # A aplicação roda aqui
     print("Encerrando serviços com segurança...")
-
+    # --- Shutdown: Encerra conexões ativas do pool na finalização ---
+    await engine.dispose()
 
 app = FastAPI(
     title="Nuclone Core API",

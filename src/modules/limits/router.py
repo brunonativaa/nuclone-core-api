@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from src.core.database import get_db
-from src.core.security import get_current_user_id
+from src.core.security import get_current_customer
 
 from src.modules.ledger.repository import LedgerRepository
 from src.modules.limits.schema import  LimitesResponseSchema, UpdateLimiteSchema
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/limits", tags=["Limits"])
 
 @router.get("/pix", response_model=LimitesResponseSchema, status_code=status.HTTP_200_OK)
 def consultar_limites_pix(
-    id_conta: int = Depends(get_current_user_id),
+    id_conta: int = Depends(get_current_customer),
     db: Session = Depends(get_db)
 ):
     service = LimitesService(LimitesRepository(db), LedgerRepository(db))
@@ -23,7 +23,7 @@ def consultar_limites_pix(
 @router.patch("/pix", response_model=LimitesResponseSchema, status_code=status.HTTP_200_OK)
 def alterar_limites_pix(
     payload: UpdateLimiteSchema,
-    id_conta: int = Depends(get_current_user_id),
+    id_conta: int = Depends(get_current_customer),
     db: Session = Depends(get_db)
 ):
     """
