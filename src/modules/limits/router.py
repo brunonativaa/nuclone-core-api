@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 
 from src.core.database import get_db
 from src.core.security import get_current_customer
 
 from src.modules.ledger.repository import LedgerRepository
+from src.modules.ledger.schema import ExtratoItemSchema, ResumoContaSchema, ExtratoCompletoSchema
 from src.modules.limits.schema import  LimitesResponseSchema, UpdateLimiteSchema
 from src.modules.limits.repository import LimitesRepository
 from src.modules.limits.service import LimitesService
