@@ -12,7 +12,7 @@ from src.core.security import (
 )
 
 
-def test_verify_password_success_and_failure():
+async def test_verify_password_success_and_failure():
     password = "SenhaSegura123!"
     hashed = hash_password(password)
 
@@ -20,7 +20,7 @@ def test_verify_password_success_and_failure():
     assert verify_password("SenhaErrada", hashed) is False
 
 
-def test_create_acess_token_with_custom_expire():
+async def test_create_access_token_with_custom_expire():
     data = {"sub": "123"}
     expires_delta = timedelta(minutes=15)
     token = create_access_token(data=data, expires_delta=expires_delta)
@@ -29,24 +29,24 @@ def test_create_acess_token_with_custom_expire():
     assert payload.get("sub") == "123"
     assert "exp" in payload
 
-def test_create_access_token_default_expires():
+async def test_create_access_token_default_expires():
     data = {"sub": "456"}
     token = create_access_token(data=data)
     
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     assert payload.get("sub") == "456"
 
-def test_get_current_customer_id_success():
+async def test_get_current_customer_id_success():
     token = create_access_token(data={"sub": "42"})
     customer_id = get_current_customer(token=token)
     assert customer_id == 42
 
-def test_get_current_customer_id_invalid_token():
+async def test_get_current_customer_id_invalid_token():
     with pytest.raises(HTTPException) as exc_info:
         get_current_customer(token="token_ivalido_ou_forjado")
     assert exc_info.value.status_code == 401
 
-def test_get_current_customer_id_missing_sub_claim():
+async def test_get_current_customer_id_missing_sub_claim():
     token = jwt.encode({"outra_claim": "valor"}, SECRET_KEY, algorithm=ALGORITHM)
     with pytest.raises(HTTPException) as exc_info:
         get_current_customer(token=token)

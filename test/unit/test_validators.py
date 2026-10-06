@@ -7,7 +7,7 @@ from src.modules.customer.schema import ClienteCreateInput
 
 # Calculator/Formatter Function
 
-def test_validate_pix_amount_success_and_rounding():
+async def test_validate_pix_amount_success_and_rounding():
 
     payload = PixTransferInput(
         id_conta_origem=1,
@@ -18,7 +18,7 @@ def test_validate_pix_amount_success_and_rounding():
     assert payload.valor == Decimal("10.56")
 
 
-def test_validate_zero_or_negative_pix_value_generates_error():
+async def test_validate_zero_or_negative_pix_value_generates_error():
 
     with pytest.raises(ValidationError) as exc_info:
         PixTransferInput(
@@ -35,11 +35,11 @@ def test_validate_zero_or_negative_pix_value_generates_error():
 
 
 @pytest.mark.unit
-def test_validate_cpf_success():
+async def test_validate_cpf_success():
     assert ClienteCreateInput.validar_cpf("123.456.789-09") == "12345678909"
 
 
 @pytest.mark.unit
-def test_validate_cpf_invalido():
+async def test_validate_cpf_invalido():
     with pytest.raises(ValueError, match="CPF deve conter exatamente 11 dígitos "):
         ClienteCreateInput.validar_cpf("000")

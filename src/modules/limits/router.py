@@ -16,21 +16,21 @@ from src.modules.limits.service import LimitesService
 router = APIRouter(prefix="/limits", tags=["Limits"])
 
 @router.get("/pix", response_model=LimitesResponseSchema, status_code=status.HTTP_200_OK)
-def consultar_limites_pix(
+async def consultar_limites_pix(
     id_conta: int = Depends(get_current_customer),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     service = LimitesService(LimitesRepository(db), LedgerRepository(db))
-    return service.obter_status_limites(id_conta)
+    return await service.obter_status_limites(id_conta)
 
 @router.patch("/pix", response_model=LimitesResponseSchema, status_code=status.HTTP_200_OK)
-def alterar_limites_pix(
+async def alterar_limites_pix(
     payload: UpdateLimiteSchema,
     id_conta: int = Depends(get_current_customer),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Atualiza parcialmente os limites operacionais Pix da conta autenticada.
     """
     service = LimitesService(LimitesRepository(db), LedgerRepository(db))
-    return service.atualizar_limites(id_conta, payload)
+    return await service.atualizar_limites(id_conta, payload)

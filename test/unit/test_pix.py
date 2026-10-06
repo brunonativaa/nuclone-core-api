@@ -11,7 +11,7 @@ from src.modules.pix.service import (
 
 
 @pytest.fixture
-def setup_two_accounts_with_balance(db_session, valid_customer_data):
+async def setup_two_accounts_with_balance(db_session, valid_customer_data):
     """
     Fixture de preparação: cria 2 clientes, 2 contas e injeta R$ 100,00 de saldo
     na conta de origem para viabilizar as simulações de PIX.
@@ -50,12 +50,12 @@ def setup_two_accounts_with_balance(db_session, valid_customer_data):
     return source_account, destination_account
 
 
-def test_execute_pix_transaction_success(db_session, setup_two_accounts_with_balance):
+async def test_execute_pix_transaction_success(db_session, setup_two_accounts_with_balance):
     """
 Testa o fluxo completo de uma transação PIX com sucesso.
 Verifica o débito na conta de origem (100 - 40 = 60) e o crédito na conta de destino (0 + 40 = 40). """
 
-    source_account, destination_account = setup_two_accounts_with_balance
+    source_account, destination_account = await setup_two_accounts_with_balance
     pix_service = PixService(db_session)
     account_service = ContaService(db_session)
 
@@ -76,9 +76,9 @@ Verifica o débito na conta de origem (100 - 40 = 60) e o crédito na conta de d
     assert float(updated_destination_balance) == 40.00
 
 
-def test_execute_pix_insufficient_balance_should_fail(db_session, setup_two_accounts_with_balance):
+async def test_execute_pix_insufficient_balance_should_fail(db_session, setup_two_accounts_with_balance):
     """Testa a regra de proteção financeira: impede transferência quando o valor excede o saldo disponível."""
-    source_account, destination_account = setup_two_accounts_with_balance
+    source_account, destination_account = await setup_two_accounts_with_balance
     pix_service = PixService(db_session)
 
     # Tenta enviar R$ 500,00 possuindo apenas R$ 100,00 em conta
@@ -90,9 +90,9 @@ def test_execute_pix_insufficient_balance_should_fail(db_session, setup_two_acco
         )
 
 
-def test_execute_pix_invalid_destination_account_should_fail(db_session, setup_two_accounts_with_balance):
+async def test_execute_pix_invalid_destination_account_should_fail(db_session, setup_two_accounts_with_balance):
     """ Testa a tentativa de transferência para uma conta de destino que não existe no banco de dados."""
-    source_account, _ = setup_two_accounts_with_balance
+    source_account, _ = await setup_two_accounts_with_balance
     pix_service = PixService(db_session)
 
     with pytest.raises(ContaNaoEncontradaException):

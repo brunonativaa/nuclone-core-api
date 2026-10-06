@@ -1,15 +1,20 @@
 from typing import Optional
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.modules.customer.model import ClienteModel
 from src.modules.account.model import ContaModel
 
 
 class AuthRepository:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
-    def get_cliente_by_cpf(self, cpf: str) -> Optional[ClienteModel]:
-        return self.db.query(ClienteModel).filter(ClienteModel.cpf == cpf).first()
+    async def get_cliente_by_cpf(self, cpf: str) -> Optional[ClienteModel]:
+        stmt = select(ClienteModel).where(ClienteModel.cpf == cpf)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
 
-    def get_account_by_cliente_id(self, id_cliente: int) -> Optional[ContaModel]:
-        return self.db.query(ContaModel).filter(ContaModel.id_cliente == id_cliente).first()
+    async def get_account_by_cliente_id(self, id_cliente: int) -> Optional[ContaModel]:
+        stmt = select(ContaModel).where(ContaModel.id_cliente == id_cliente)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()

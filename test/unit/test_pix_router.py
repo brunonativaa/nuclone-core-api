@@ -16,7 +16,7 @@ client = TestClient(app)
 # --- TESTES DA ROTA /transfer ---
 
 @patch("src.modules.pix.router.PixService")
-def test_transfer_pix_success(mock_pix_service):
+async def test_transfer_pix_success(mock_pix_service):
     mock_service_instance = MagicMock()
     mock_pix_service.return_value = mock_service_instance
 
@@ -27,7 +27,7 @@ def test_transfer_pix_success(mock_pix_service):
     payload = {"id_conta_origem": 1,
                "chave_destino": "teste@pix.com", "valor": 50.0}
 
-    response = client.post("/api/v1/pix/transfer", json=payload)
+    response = await client.post("/api/v1/pix/transfer", json=payload)
 
     assert response.status_code == 200
     assert response.json()[
@@ -36,7 +36,7 @@ def test_transfer_pix_success(mock_pix_service):
 
 
 @patch("src.modules.pix.router.PixService")
-def test_transfer_pix_account_not_found(mock_pix_service):
+async def test_transfer_pix_account_not_found(mock_pix_service):
     mock_service_instance = MagicMock()
     mock_pix_service.return_value = mock_service_instance
     mock_service_instance.make_pix_payment.side_effect = (
@@ -46,14 +46,14 @@ def test_transfer_pix_account_not_found(mock_pix_service):
     payload = {"id_conta_origem": 999,
                "chave_destino": "teste@pix.com", "valor": 50.0}
 
-    response = client.post("/api/v1/pix/transfer", json=payload)
+    response = await client.post("/api/v1/pix/transfer", json=payload)
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Conta de origem não encontrada."
 
 
 @patch("src.modules.pix.router.PixService")
-def test_transfer_pix_insufficient_balance(mock_pix_service):
+async def test_transfer_pix_insufficient_balance(mock_pix_service):
     mock_service_instance = MagicMock()
     mock_pix_service.return_value = mock_service_instance
     mock_service_instance.make_pix_payment.side_effect = (
@@ -63,14 +63,14 @@ def test_transfer_pix_insufficient_balance(mock_pix_service):
     payload = {"id_conta_origem": 1,
                "chave_destino": "teste@pix.com", "valor": 5000.0}
 
-    response = client.post("/api/v1/pix/transfer", json=payload)
+    response = await client.post("/api/v1/pix/transfer", json=payload)
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Saldo insuficiente."
 
 
 @patch("src.modules.pix.router.PixService")
-def test_transfer_pix_value_error(mock_pix_service):
+async def test_transfer_pix_value_error(mock_pix_service):
     mock_service_instance = MagicMock()
     mock_pix_service.return_value = mock_service_instance
     mock_service_instance.make_pix_payment.side_effect = ValueError(
@@ -80,7 +80,7 @@ def test_transfer_pix_value_error(mock_pix_service):
     payload = {"id_conta_origem": 1,
                "chave_destino": "teste@pix.com", "valor": 10.0}
 
-    response = client.post("/api/v1/pix/transfer", json=payload)
+    response = await client.post("/api/v1/pix/transfer", json=payload)
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Valor inválido."
@@ -89,7 +89,7 @@ def test_transfer_pix_value_error(mock_pix_service):
 
 
 @patch("src.modules.pix.router.PixService")
-def test_create_pix_key_success(mock_pix_service):
+async def test_create_pix_key_success(mock_pix_service):
     mock_service_instance = MagicMock()
     mock_pix_service.return_value = mock_service_instance
 
@@ -104,7 +104,7 @@ def test_create_pix_key_success(mock_pix_service):
         "valor_chave": "cliente@nuclone.com",
     }
 
-    response = client.post("/api/v1/pix/keys", json=payload)
+    response = await client.post("/api/v1/pix/keys", json=payload)
 
     assert response.status_code == 201
     assert response.json()["message"] == "Chave Pix Cadastrada com sucesso!"
@@ -112,7 +112,7 @@ def test_create_pix_key_success(mock_pix_service):
 
 
 @patch("src.modules.pix.router.PixService")
-def test_create_pix_key_account_not_found(mock_pix_service):
+async def test_create_pix_key_account_not_found(mock_pix_service):
     mock_service_instance = MagicMock()
     mock_pix_service.return_value = mock_service_instance
     mock_service_instance.register_pix_key.side_effect = (
@@ -125,14 +125,14 @@ def test_create_pix_key_account_not_found(mock_pix_service):
         "valor_chave": "cliente@nuclone.com",
     }
 
-    response = client.post("/api/v1/pix/keys", json=payload)
+    response = await client.post("/api/v1/pix/keys", json=payload)
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Conta não existe."
 
 
 @patch("src.modules.pix.router.PixService")
-def test_create_pix_key_value_error(mock_pix_service, client):
+async def test_create_pix_key_value_error(mock_pix_service, client):
     mock_service_instance = MagicMock()
     mock_pix_service.return_value = mock_service_instance
     mock_service_instance.register_pix_key.side_effect = ChavePixDuplicadaException(
@@ -145,7 +145,7 @@ def test_create_pix_key_value_error(mock_pix_service, client):
         "valor_chave": "repetida@nuclone.com",
     }
 
-    response = client.post("/api/v1/pix/keys", json=payload)
+    response = await client.post("/api/v1/pix/keys", json=payload)
 
     assert response.status_code == 409
     assert response.json()["detail"] == "Chave Pix já cadastrada."

@@ -19,10 +19,10 @@ class ClienteNaoEncontradoException(Exception):
 
 class ContaService:
 
-    def __init__(self, db):
-        self.db = db
-        self.conta_repo = ContaRepository(db)
-        self.cliente_repo = ClienteRepository(db)
+    def __init__(self, db_session: AsyncSession, conta_repo = None, cliente_repo= None):
+        self.db = db_session 
+        self.conta_repo = conta_repo or ContaRepository(db_session)
+        self.cliente_repo = cliente_repo or ClienteRepository(db_session)
 
     def _gerar_num_conta(self) -> str:
             return str(random.randint(100000, 999999))

@@ -30,7 +30,7 @@ async def login(
     if not cliente or not verify_password(form_data.password, cliente.senha_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="CPF ou senha incorretos",
+            detail="CPF ou senha invalidos.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

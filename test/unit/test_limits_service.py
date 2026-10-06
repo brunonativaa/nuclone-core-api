@@ -7,13 +7,13 @@ from src.modules.limits.schema import UpdateLimiteSchema
 from src.modules.limits.model import LimiteContaModel
 
 @pytest.fixture
-def mock_repos():
+async def mock_repos():
     limits_repo = MagicMock()
     ledger_repo = MagicMock()
     return limits_repo, ledger_repo
 
 
-def  test_validate_and_use_account_limit_not_found(mock_repos):
+async def test_validate_and_use_account_limit_not_found(mock_repos):
     limits_repo, ledger_repo = mock_repos
     limits_repo.get_by_conta.return_value = None
     service = LimitesService(limits_repo, ledger_repo)
@@ -21,7 +21,7 @@ def  test_validate_and_use_account_limit_not_found(mock_repos):
     with pytest.raises(LimitNotFoundException):
         service.validar_e_consumir_limite(id_conta=1, valor=Decimal("100.00"))
 
-def test_validate_and_consume_limit_exceeded(mock_repos):
+async def test_validate_and_consume_limit_exceeded(mock_repos):
     limits_repo , ledger_repo = mock_repos
 
     # Configura limite de R$ 500
@@ -39,7 +39,7 @@ def test_validate_and_consume_limit_exceeded(mock_repos):
     
     assert exc_info.value.disponivel == Decimal("50.00")
 
-def test_validate_and_use_limit_success(mock_repos):
+async def test_validate_and_use_limit_success(mock_repos):
     limits_repo, ledger_repo = mock_repos
     
     limite_config = LimiteContaModel(id_conta=1, limite_diario=Decimal("1000.00"), limite_noturno=Decimal("500.00"))
@@ -51,7 +51,7 @@ def test_validate_and_use_limit_success(mock_repos):
     resultado = service.validar_e_consumir_limite(id_conta=1, valor=Decimal("200.00"))
     assert resultado is True
 
-def test_get_status_limits_success(mock_repos):
+async def test_get_status_limits_success(mock_repos):
     limits_repo, ledger_repo = mock_repos
     
     limite_config = LimiteContaModel(id_conta=1, limite_diario=Decimal("1000.00"), limite_noturno=Decimal("300.00"))
@@ -59,13 +59,13 @@ def test_get_status_limits_success(mock_repos):
     ledger_repo.get_total_gasto_janela.side_effect = [Decimal("150.00"), Decimal("0.00")]
     
     service = LimitesService(limits_repo, ledger_repo)
-    status = service.obter_status_limites(id_conta=1)
+    status = await service.obter_status_limites(id_conta=1)
 
     assert status["id_conta"] == 1
     assert status["limite_diario"] == Decimal("1000.00")
     assert status["limite_diario_utilizado"] == Decimal("150.00")
 
-def test_update_limits_success(mock_repos):
+async def test_update_limits_success(mock_repos):
     limits_repo, ledger_repo = mock_repos
     
     limite_config = LimiteContaModel(id_conta=1, limite_diario=Decimal("1000.00"), limite_noturno=Decimal("300.00"))
@@ -75,7 +75,7 @@ def test_update_limits_success(mock_repos):
     service = LimitesService(limits_repo, ledger_repo)
     
     payload = UpdateLimiteSchema(novo_limite_diario=Decimal("2000.00"), novo_limite_noturno=None)
-    res = service.atualizar_limites(id_conta=1, payload=payload)
+    res = await service.atualizar_limites(id_conta=1, payload=payload)
 
     assert limits_repo.update_limits.called
     assert limite_config.limite_diario == Decimal("2000.00")

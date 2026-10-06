@@ -1,7 +1,8 @@
 from decimal import Decimal
 from typing import Optional
 from sqlalchemy import select, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.modules.account.model import ContaModel,  SaldoContaModel
 from src.modules.customer.model import ClienteModel, TelefoneModel
 from src.modules.ledger.model import TransacaoModel, TipoTransacaoEnum
@@ -10,18 +11,18 @@ from src.modules.pix.model import ChavePixModel
 
 class PixRepository:
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
-    def get_key_by_value(self, valor_chave: str) -> Optional[ChavePixModel]:
+    async def get_key_by_value(self, valor_chave: str) -> Optional[ChavePixModel]:
         """Busca uma chave PIX específica pelo seu valor."""
         return (
-            self.db.query(ChavePixModel)
+            await self.db.query(ChavePixModel)
             .filter(ChavePixModel.valor_chave == valor_chave)
             .first()
         )
 
-    def create_pix_key(self, id_conta: int, tipo_chave: str, valor_chave: str) -> ChavePixModel:
+    async def create_pix_key(self, id_conta: int, tipo_chave: str, valor_chave: str) -> ChavePixModel:
         """
         Instancia e adiciona a nova Chave PIX na sessão da ORM.
         Nota: Não executa commit() aqui para permitir controle transacional (Unit of Work) na camada de Service.
@@ -33,12 +34,12 @@ class PixRepository:
             valor_chave=valor_chave
         )
         self.db.add(nova_chave)
-        self.db.flush() # Flush para obter o ID da chave PIX gerada na transação ativa
+        await self.db.flush() # Flush para obter o ID da chave PIX gerada na transação ativa
         return nova_chave
 
     
 
-    def search_account_by_key(self, chave_pix: str) -> Optional[ContaModel]:
+    async def search_account_by_key(self, chave_pix: str) -> Optional[ContaModel]:
         """Busca a conta associada a uma chave PIX, CPF, e-mail ou telefone."""
         stmt = (
             select(ContaModel)
@@ -54,11 +55,11 @@ class PixRepository:
                 )
             )
         )
-        return self.db.scalar(stmt)
+        return await self.db.scalar(stmt)
 
-    def update_saldo(self, id_conta: int, valor: Decimal | str | float) -> Optional[SaldoContaModel]:
+    async def update_saldo(self, id_conta: int, valor: Decimal | str | float) -> Optional[SaldoContaModel]:
         stmt = select(SaldoContaModel).where(SaldoContaModel.id_conta == id_conta)
-        saldo = self.db.scalar(stmt)
+        saldo = await self.db.scalar(stmt)
 
         if not saldo:
             return None
@@ -67,7 +68,7 @@ class PixRepository:
         self.db.add(saldo)
         return saldo
 
-    def debit_with_lock(self, id_conta: int, valor: Decimal) -> bool:
+    async def debit_with_lock(self, id_conta: int, valor: Decimal) -> bool:
         """
         Aplica Pessimistic Locking (FOR UPDATE) para evitar race conditions
         e garante que o saldo seja suficiente antes de debitar.
@@ -78,7 +79,7 @@ class PixRepository:
             .with_for_update()  # Executa SELECT ... FOR UPDATE no PostgreSQL
         )
 
-        saldo = self.db.scalar(stmt)
+        saldo = await self.db.scalar(stmt)
 
         if not saldo or saldo.saldo_disponivel < valor:
             return False    
@@ -87,11 +88,11 @@ class PixRepository:
         self.db.add(saldo)
         return True
 
-    def credit(self, id_conta: int, valor: Decimal | str | float) -> Optional[SaldoContaModel]:
+    async def credit(self, id_conta: int, valor: Decimal | str | float) -> Optional[SaldoContaModel]:
         # Passa o valor positivo para somar
-        return self.update_saldo(id_conta, Decimal(str(valor)))
+        return await self.update_saldo(id_conta, Decimal(str(valor)))
 
-    def record_transaction(self, data: dict) -> TransacaoModel:
+    async def record_transaction(self, data: dict) -> TransacaoModel:
         transacao = TransacaoModel(
             id_conta_origem=data["id_conta_origem"],
             id_conta_destino=data["id_conta_destino"],
@@ -99,5 +100,5 @@ class PixRepository:
             valor=data["valor"]
         )
         self.db.add(transacao)
-        self.db.flush()
+        await self.db.flush()
         return transacao

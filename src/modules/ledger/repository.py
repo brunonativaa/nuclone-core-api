@@ -49,20 +49,30 @@ class LedgerRepository:
         self,
         id_conta: int,
         inicio: datetime,
-        fim: datetime
+        fim: datetime,
+        is_noturno: Optional[bool] = None
     ) -> Decimal:
         """
         Soma o total transacionado (saídas/débitos) dentro de uma janela de tempo específica.
         Utilizado para validação de limites diários e limites noturnos do Pix.
         """
-        stmt = select(
-            func.coalesce(func.sum(TransacaoModel.valor), Decimal("0.00"))
-        ).where(
+        # Filtros base obrigatórios
+        conditions = [
             TransacaoModel.id_conta_origem == id_conta,
             TransacaoModel.status == StatusTransacaoEnum.CONCLUIDO,
             TransacaoModel.created_at >= inicio,
-            TransacaoModel.created_at <= fim
-        )
+            TransacaoModel.created_at <= fim,
+        ]
+
+        # Filtro condicional caso a flag de limite noturno seja enviada
+        if is_noturno is not None and hasattr(TransacaoModel, "is_noturno"):
+            conditions.append(TransacaoModel.is_noturno == is_noturno)
+
+        stmt = select(
+            func.coalesce(func.sum(TransacaoModel.valor), Decimal("0.00"))
+        ).where(*conditions)
+
         result = await self.db.execute(stmt)
         resultado = result.scalar()
+
         return Decimal(str(resultado)) if resultado is not None else Decimal("0.00")
