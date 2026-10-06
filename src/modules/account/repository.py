@@ -2,48 +2,36 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.ext.asyncio import AsyncSession 
 from src.modules.account.model import ContaModel, SaldoContaModel
 
 
 class ContaRepository:
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
-    def create_account(self, data) -> ContaModel:
+    async def create_account(self, data) -> ContaModel:
         payload = data.model_dump() if isinstance(data, BaseModel) else data
         conta = ContaModel(**payload)
         self.db.add(conta)
-        self.db.flush()
-        self.db.refresh(conta)
+        await self.db.flush()
+        await self.db.refresh(conta)
         return conta
 
-    def create_saldo(self, id_conta: int) -> SaldoContaModel:
+    async def create_balance(self, id_conta: int) -> SaldoContaModel:
         saldo = SaldoContaModel(id_conta=id_conta, saldo_disponivel=0.00)
         self.db.add(saldo)
-        self.db.flush()
+        await self.db.flush()
         return saldo
 
-    def get_saldo(self, id_conta: int) -> Optional[SaldoContaModel]:
+    async def get_balance(self, id_conta: int) -> Optional[SaldoContaModel]:
         stmt = select(SaldoContaModel).where(SaldoContaModel.id_conta == id_conta)
-        saldo = self.db.scalar(stmt)
-    
-    # Se o saldo não for encontrado no banco mas a conta existir, inicializa com 0.00
-        if saldo is None:
-            conta = self.search_account(id_conta)
-            if conta:
-                saldo = SaldoContaModel(
-                    id_conta=id_conta,
-                    saldo_disponivel=0.00,
-                    saldo_bloqueado=0.00,
-                    ultima_atualizacao=datetime.now(timezone.utc)
-            )
-                self.db.add(saldo)
-                self.db.commit()
-
+        result = await self.db.execute(stmt)
+        saldo =  result.scalar_one_or_none()
+        
         return saldo
     
-    def search_account(self, id_conta: int) -> Optional[ContaModel]:
+    async def search_account(self, id_conta: int) -> Optional[ContaModel]:
 
-        return self.db.get(ContaModel, id_conta)
+        return await self.db.get(ContaModel, id_conta)
