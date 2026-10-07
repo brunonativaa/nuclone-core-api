@@ -18,7 +18,7 @@ async def test_create_account_success(db_session, valid_customer_data):
     customer_service = ClienteService(db_session)
     account_service = ContaService(db_session)
 
-    customer_input = _ensure_customer_input(valid_customer_data)
+    customer_input = await _ensure_customer_input(valid_customer_data)
     customer = await customer_service.create_customer(customer_input)
 
     account_data = AccountCreateInput(
@@ -36,7 +36,7 @@ async def test_get_initial_balance_zero(db_session, valid_customer_data):
     customer_service = ClienteService(db_session)
     account_service = ContaService(db_session)
 
-    customer_input = _ensure_customer_input(valid_customer_data)
+    customer_input = await _ensure_customer_input(valid_customer_data)
     customer = await customer_service.create_customer(customer_input)
 
     account_input = AccountCreateInput(
@@ -44,7 +44,7 @@ async def test_get_initial_balance_zero(db_session, valid_customer_data):
     )
     account = await account_service.create_account(account_input)
 
-    balance_info = await account_service.get_saldo(account.id_conta)
+    balance_info = await account_service.get_balance(account.id_conta)
 
     assert balance_info is not None
     assert float(balance_info.saldo_disponivel) == 0.00

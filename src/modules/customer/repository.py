@@ -2,6 +2,7 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.modules.customer.model import ClienteModel
+from src.modules.customer.exceptions import ClienteNaoEncontradoException
 
 
 class ClienteRepository:
@@ -25,4 +26,7 @@ class ClienteRepository:
        return (await self.db.scalar(stmt))
     
     async def get_by_id(self, id_cliente: int) -> ClienteModel | None:
-        return await self.db.get(ClienteModel, id_cliente) # Para busca por Chave Primária, o db.get() é a forma nativa mais eficiente do ORM 2.0
+        cliente = await self.db.get(ClienteModel, id_cliente) # Para busca por Chave Primária, o db.get() é a forma nativa mais eficiente do ORM 2.0
+        if not cliente:
+            raise ClienteNaoEncontradoException(f"Cliente {id_cliente} não encontrado")
+        return cliente

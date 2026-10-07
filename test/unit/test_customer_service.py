@@ -1,11 +1,9 @@
 import pytest
 from pydantic import ValidationError
-from src.modules.customer.service import (
-    ClienteService,
-    ClienteJaExisteException,
-    ClienteNaoEncontradoException
-)
+from src.modules.customer.service import ClienteService
+from src.modules.customer.repository import ClienteRepository
 from src.modules.customer.schema import ClienteCreateInput
+from src.modules.customer.exceptions import ClienteJaExisteException, ClienteNaoEncontradoException
 
 
 async def test_create_customer_siccess_with_dict(db_session, valid_customer_data):
@@ -24,7 +22,6 @@ async def test_create_customer_siccess_with_dict(db_session, valid_customer_data
     assert cliente_criado.senha_hash != "senha123" # Deve ter sido criptografada (row 54)
 
 async def test_create_customer_success_with_dto(db_session, valid_customer_data):
-    """Testa o suporte a envio de DTO diretamente (rows 24-25 do código)."""
 
     service = ClienteService(db_session)
     dto = ClienteCreateInput(**valid_customer_data)
@@ -35,7 +32,6 @@ async def test_create_customer_success_with_dto(db_session, valid_customer_data)
     assert cliente_criado.email == valid_customer_data["email"]
 
 async def test_get_customer_by_id_success(db_session, valid_customer_data):
-    """Testa a busca de cliente existente por ID (rows 67-71)."""
     
     service = ClienteService(db_session)
     criado = await service.create_customer(valid_customer_data)
@@ -47,11 +43,12 @@ async def test_get_customer_by_id_success(db_session, valid_customer_data):
 
 async def test_get_all_customers_returns_list(db_session, valid_customer_data):
 
-    """Testa a listagem de todos os clientes (rows 72-74)."""
-    service = ClienteService(db_session)
-    await service.create_customer(valid_customer_data)
+    cliente_repo = ClienteRepository(db_session)
+    cliente_service = ClienteService(db_session)
 
-    lista = await service.get_all()
+    await cliente_service.create_customer(valid_customer_data)
+
+    lista = await cliente_repo.get_all()
 
     assert len(lista) > 0
 
@@ -71,35 +68,29 @@ async def test_create_customer_duplicate_cpf_should_fail(db_session, valid_custo
     assert "Já existe um cliente cadastrado com esse CPF." in str(exc_info.value)
 
 async def test_create_customer_missing_password_or_pin_should_fail(db_session, valid_customer_data):
-    """Testa a validação de ausência de senha/PIN (linhas 49-51)."""
-
+    """Testa a validação de ausência de senha/PIN """
     service = ClienteService(db_session)
 
     data_sem_senha = valid_customer_data.copy()
     data_sem_senha.pop("senha_hash", None)
     data_sem_senha.pop("senha", None)
 
-    with pytest.raises(ValidationError) as exc_info:
+    with pytest.raises(ValueError, match="Senha e PIN de transação são obrigatórios") as exc_info:
         await service.create_customer(data_sem_senha)
 
-    assert "senha_hash" in str(exc_info.value)
-    assert "Field required" in str(exc_info.value) 
+    assert "Senha e PIN de transação são obrigatórios para o cadastro." in str(exc_info.value)
 
 
 async def test_get_customer_by_non_existing_id_should_fail(db_session):
-
-    """Testa o tratamento ao buscar ID inexistente (linhas 68-70)."""
-    service = ClienteService(db_session)
+    cliente_repo = ClienteRepository(db_session)
 
     with pytest.raises(ClienteNaoEncontradoException) as exc_info:
-        await service.get_by_id(id_cliente=999999)
+        await cliente_repo.get_by_id(id_cliente=999999)
 
-    assert "Cliente não encontrado" in str(exc_info.value)
+    assert "Cliente 999999 não encontrado" in str(exc_info.value)
 
 
 async def test_create_customer_rollback_on_database_erro(db_session, valid_customer_data, monkeypatch):
-    """Testa o bloco 'except Exception' com rollback (linhas 62-64) usando 
-       monkepatch para simular uma falha forçada"""
 
     service = ClienteService(db_session)
 

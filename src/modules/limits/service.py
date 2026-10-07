@@ -5,27 +5,22 @@ import zoneinfo
 from src.modules.limits.schema import UpdateLimiteSchema
 from src.modules.limits.repository import LimitesRepository
 from src.modules.ledger.repository import LedgerRepository
-
-
-class LimitNotFoundException(Exception):
-    pass
-
-class ExceededLimitException(Exception):
-    def __init__(self, message: str, disponivel: Decimal):
-        super().__init__(message)
-        self.disponivel = disponivel
+from src.modules.limits.exceptions import LimitNotFoundException, ExceededLimitException
 
 class LimitesService:
-    async def __init__(self, limits_repo: LimitesRepository, ledger_repo: LedgerRepository):
+    def __init__(self, limits_repo: LimitesRepository, ledger_repo: LedgerRepository):
         self.limits_repo = limits_repo
         self.ledger_repo = ledger_repo
         self.tz_br = zoneinfo.ZoneInfo("America/Sao_Paulo")
-
-    async def _is_horario_noturno(self, data_hora: datetime) -> bool:
-
-        hora_local = data_hora.astimezone(self.tz_br).hour  
-        return hora_local >= 20 or hora_local < 6
     
+    def _is_horario_noturno(self, data_hora: datetime) -> bool: 
+            """Determina se a transação ocorre na janela noturna (20h às 06h BRT).
+            
+            Método síncrono utilitário (CPU-bound puro).
+            """
+            hora_local = data_hora.astimezone(self.tz_br).hour
+            return hora_local >= 20 or hora_local < 6
+        
 
     async def validar_e_consumir_limite(self, id_conta: int, valor: Decimal) -> bool:
         limite_config = await self.limits_repo.get_by_conta(id_conta)
@@ -33,7 +28,7 @@ class LimitesService:
             raise LimitNotFoundException("Configuração de limites não encontrada.")
 
         agora = datetime.now(timezone.utc)
-        is_noturno = await self._is_horario_noturno(agora)
+        is_noturno =  self._is_horario_noturno(agora)
         limite_maximo = limite_config.limite_noturno if is_noturno else limite_config.limite_diario
 
         inicio_janela = agora - timedelta(hours=24)

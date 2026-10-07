@@ -6,14 +6,7 @@ from src.core.security import hash_password
 from src.modules.customer.model import ClienteModel
 from src.modules.customer.repository import ClienteRepository
 from src.modules.customer.schema import ClienteCreateInput
-
-
-class ClienteJaExisteException(Exception):
-    pass
-
-
-class ClienteNaoEncontradoException(Exception):
-    pass
+from src.modules.customer.exceptions import ClienteJaExisteException, ClienteNaoEncontradoException
 
 
 class ClienteService:
