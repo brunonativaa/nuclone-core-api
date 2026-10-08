@@ -24,11 +24,6 @@ class ContaRepository:
         await self.db.refresh(conta)
         return conta
 
-    async def create_balance(self, id_conta: int) -> SaldoContaModel:
-        saldo = SaldoContaModel(id_conta=id_conta, saldo_disponivel=0.00)
-        self.db.add(saldo)
-        await self.db.flush()
-        return saldo
 
     async def get_account_by_id(self, id_conta: int) -> Optional[ContaModel]:
         return await self.db.get(ContaModel, id_conta)

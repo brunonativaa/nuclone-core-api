@@ -34,15 +34,21 @@ class ContaService:
             )
 
             # Inicializa o registro de saldo na tabela correspondente
-            await self.conta_repo.create_balance(id_conta=conta.id_conta)
+            await self.conta_repo.create_balance(id_conta=conta.id_conta, saldo_inicial=Decimal("0.00"))
 
             return conta
+
+    async def create_balance(self, id_conta: int) -> SaldoContaModel:
+        saldo = SaldoContaModel(id_conta=id_conta, saldo_disponivel=Decimal("0.00"))
+        self.db.add(saldo)
+        await self.db.flush()
+        return saldo    
 
     async def get_by_id(self, id_conta: int) -> ContaModel:
         conta = await self.conta_repo.get_account_by_id(id_conta)
        
         if not conta:
-            raise ContaNaoEncontradaException(f"Conta com ID {id_conta} não encontrada.")
+            raise ContaNaoEncontradaException(id_conta)
         return conta
 
     async def get_balance(self, id_conta: int) -> SaldoContaModel:
@@ -54,7 +60,7 @@ class ContaService:
 
         # 3. Fallback: cria saldo se não existir
         if not saldo:
-            saldo = await self.conta_repo.create_balance(id_conta)
+            saldo = await self.conta_repo.create_balance(id_conta, saldo_inicial=Decimal("0.00"))
             await self.db.commit()
             await self.db.refresh(saldo)
 
@@ -62,7 +68,7 @@ class ContaService:
 
     async def credit(self, id_conta: int, valor: Decimal) -> SaldoContaModel:
        
-        if valor <= Decimal("0"):
+        if valor <= Decimal("0.00"):
             raise ValueError("O valor adicionado deve ser maior que zero.")
 
         saldo = await self.get_balance(id_conta)
@@ -73,13 +79,13 @@ class ContaService:
 
     async def debit_with_lock(self, id_conta: int, valor: Decimal) -> SaldoContaModel:
        
-        if valor <= Decimal("0"):
+        if valor <= Decimal("0.00"):
             raise ValueError("O valor do débito deve ser maior que zero.")
 
         # Busca com bloqueio pessimista
         saldo = await self.conta_repo.get_balance_for_update(id_conta)
         if not saldo:
-            raise ContaNaoEncontradaException(f"Conta com ID {id_conta} não encontrada.")
+            raise ContaNaoEncontradaException(id_conta)
 
         # Validação da regra de negócio
         if saldo.saldo_disponivel < valor:

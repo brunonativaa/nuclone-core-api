@@ -81,28 +81,28 @@ class PixService:
         
         valor_decimal = Decimal(str(valor)) # Executa uma transferência PIX entre contas de forma atômica.
         if valor_decimal <= Decimal("0.00"):
-            raise ValueError("O valor do PIX deve ser maior que zero.")
+            raise ValueError("O valor do Pix deve ser maior que zero.")
 
         # 1. Validação da conta de origem        
         conta_origem = await self.conta_repo.get_account_by_id(id_conta_origem)
         if not conta_origem:
-            raise ContaNaoEncontradaException(
-                "Conta de origem não encontrada.")
+            raise ContaNaoEncontradaException(id_conta_origem)
 
 
         # 2. Resolução da conta de destino
         if chave_destino:
             conta_destino_obj = await self.pix_repo.search_account_by_key(chave_destino)
             if not conta_destino_obj:
-                raise ContaNaoEncontradaException("Chave PIX de destino não encontrada.")
+                raise ContaNaoEncontradaException(0)
             id_conta_destino = conta_destino_obj.id_conta
+
 
         if not id_conta_destino:
             raise ContaNaoEncontradaException("Conta de destino não informada.")
 
         conta_destino = await self.conta_repo.get_account_by_id(id_conta_destino)
         if not conta_destino:
-            raise ContaNaoEncontradaException("Conta de destino não encontrada.")
+            raise ContaNaoEncontradaException(id_conta_destino)
 
         if id_conta_origem == id_conta_destino:
             raise ValueError("Não é possível realizar transferência PIX para a mesma conta.")
