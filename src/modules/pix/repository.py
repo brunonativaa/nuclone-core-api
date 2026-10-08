@@ -16,11 +16,9 @@ class PixRepository:
 
     async def get_key_by_value(self, valor_chave: str) -> Optional[ChavePixModel]:
         """Busca uma chave PIX específica pelo seu valor."""
-        return (
-            await self.db.query(ChavePixModel)
-            .filter(ChavePixModel.valor_chave == valor_chave)
-            .first()
-        )
+     
+        stmt = select(ChavePixModel).where(ChavePixModel.valor_chave == valor_chave)
+        return await self.db.scalar(stmt)
 
     async def create_pix_key(self, id_conta: int, tipo_chave: str, valor_chave: str) -> ChavePixModel:
         """
@@ -36,8 +34,6 @@ class PixRepository:
         self.db.add(nova_chave)
         await self.db.flush() # Flush para obter o ID da chave PIX gerada na transação ativa
         return nova_chave
-
-    
 
     async def search_account_by_key(self, chave_pix: str) -> Optional[ContaModel]:
         """Busca a conta associada a uma chave PIX, CPF, e-mail ou telefone."""
@@ -56,39 +52,6 @@ class PixRepository:
             )
         )
         return await self.db.scalar(stmt)
-
-    async def update_saldo(self, id_conta: int, valor: Decimal | str | float) -> Optional[SaldoContaModel]:
-        stmt = select(SaldoContaModel).where(SaldoContaModel.id_conta == id_conta)
-        saldo = await self.db.scalar(stmt)
-
-        if not saldo:
-            return None
-
-        saldo.saldo_disponivel += Decimal(str(valor))
-        self.db.add(saldo)
-        return saldo
-
-    async def debit_with_lock(self, id_conta: int, valor: Decimal) -> bool:
-        """
-        Aplica Pessimistic Locking (FOR UPDATE) para evitar race conditions
-        e garante que o saldo seja suficiente antes de debitar.
-        """
-        stmt = (
-            select(SaldoContaModel)
-            .where(SaldoContaModel.id_conta == id_conta)
-            .with_for_update()  # Executa SELECT ... FOR UPDATE no PostgreSQL
-        )
-
-        saldo = await self.db.scalar(stmt)
-
-        if not saldo or saldo.saldo_disponivel < valor:
-            return False    
-
-        saldo.saldo_disponivel -= valor
-        self.db.add(saldo)
-        return True
-
-    async def credit(self, id_conta: int, valor: Decimal | str | float) -> Optional[SaldoContaModel]:
         # Passa o valor positivo para somar
         return await self.update_saldo(id_conta, Decimal(str(valor)))
 
