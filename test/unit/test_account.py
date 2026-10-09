@@ -24,7 +24,12 @@ async def test_create_account_success(db_session, valid_customer_data):
     account_data = AccountCreateInput(
         id_cliente=customer.id_cliente, tipo_conta="PF"
     )
-    account = await account_service.create_account(account_data)
+   
+    account = await account_service.create_account(
+        id_cliente=account_data.id_cliente,
+        agencia=account_data.agencia,
+        tipo_conta=account_data.tipo_conta,
+    )
 
     assert account.id_conta is not None
     assert account.id_cliente == customer.id_cliente
@@ -42,7 +47,11 @@ async def test_get_initial_balance_zero(db_session, valid_customer_data):
     account_input = AccountCreateInput(
         id_cliente=customer.id_cliente, tipo_conta="PF"
     )
-    account = await account_service.create_account(account_input)
+    account = await account_service.create_account(
+        id_cliente=account_input.id_cliente,
+        agencia=account_input.agencia,
+        tipo_conta=account_input.tipo_conta,
+    )
 
     balance_info = await account_service.get_balance(account.id_conta)
 
@@ -56,4 +65,9 @@ async def test_create_account_for_non_existing_customer_should_fail(db_session):
     invalid_account_input = AccountCreateInput(id_cliente=9999999)
 
     with pytest.raises(ClienteNaoEncontradoException):
-        await account_service.create_account(invalid_account_input)
+        # ✅ Passa o id_cliente como int
+        await account_service.create_account(
+            id_cliente=invalid_account_input.id_cliente,
+            agencia=invalid_account_input.agencia,
+            tipo_conta=invalid_account_input.tipo_conta,
+        )

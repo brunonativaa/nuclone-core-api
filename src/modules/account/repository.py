@@ -9,8 +9,8 @@ from src.modules.account.model import ContaModel, SaldoContaModel
 
 class ContaRepository:
 
-    def __init__(self, db: AsyncSession):
-        self.db = db
+    def __init__(self, db_session: AsyncSession):
+        self.db = db_session
 
     async def create_account(self, id_cliente: int, agencia: str, num_conta: str, tipo_conta: str = "PF") -> ContaModel:
         conta = ContaModel(
@@ -23,6 +23,15 @@ class ContaRepository:
         await self.db.flush()
         await self.db.refresh(conta)
         return conta
+
+    async def create_balance(self, id_conta: int, saldo_inicial: Decimal = Decimal("0.00")) -> SaldoContaModel:
+        saldo = SaldoContaModel(
+            id_conta=id_conta,
+            saldo_disponivel=saldo_inicial
+        )
+        self.db.add(saldo)
+        await self.db.flush()
+        return saldo
 
 
     async def get_account_by_id(self, id_conta: int) -> Optional[ContaModel]:

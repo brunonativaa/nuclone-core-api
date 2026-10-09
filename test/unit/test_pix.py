@@ -3,8 +3,9 @@ from datetime import date
 from decimal import Decimal
 import pytest
 
-from src.modules.customer.repository import ClienteRepository
+from src.modules.account.repository import ContaRepository
 from src.modules.account.service import ContaService
+from src.modules.customer.repository import ClienteRepository
 from src.modules.pix.service import PixService
 from src.modules.pix.exceptions import SaldoInsuficienteException, ContaNaoEncontradaException
 
@@ -14,10 +15,10 @@ async def setup_two_accounts_with_balance(db_session, valid_customer_data):
     cliente_repo = ClienteRepository(db_session)
     account_service = ContaService(db_session)
 
-    # 1. Cria Cliente Origem
+    # 1. Cria Cliente Origem utilizando o ClienteRepository
     customer1 = await cliente_repo.create(valid_customer_data)
 
-    # 2. Cria Conta Origem passando os valores primitivos
+    # 2. Cria Conta Origem vinculada ao cliente 1
     source_account = await account_service.create_account(
         id_cliente=customer1.id_cliente,
         agencia="0001",
@@ -54,6 +55,7 @@ async def setup_two_accounts_with_balance(db_session, valid_customer_data):
     return source_account, destination_account
 
 
+@pytest.mark.asyncio
 async def test_execute_pix_transaction_success(db_session, setup_two_accounts_with_balance):
     source_account, destination_account = setup_two_accounts_with_balance
     pix_service = PixService(db_session)
@@ -74,6 +76,7 @@ async def test_execute_pix_transaction_success(db_session, setup_two_accounts_wi
     assert dest_balance.saldo_disponivel == Decimal("40.00")
 
 
+@pytest.mark.asyncio
 async def test_execute_pix_insufficient_balance_should_fail(db_session, setup_two_accounts_with_balance):
     source_account, destination_account = setup_two_accounts_with_balance
     pix_service = PixService(db_session)
@@ -86,6 +89,7 @@ async def test_execute_pix_insufficient_balance_should_fail(db_session, setup_tw
         )
 
 
+@pytest.mark.asyncio
 async def test_execute_pix_invalid_destination_account_should_fail(db_session, setup_two_accounts_with_balance):
     source_account, _ = setup_two_accounts_with_balance
     pix_service = PixService(db_session)

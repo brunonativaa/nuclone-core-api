@@ -51,17 +51,19 @@ async def test_create_account_rollback_on_exception(account_service_mocked):
     assert "Erro de Banco" in str(exc_info.value)
 
 @pytest.mark.asyncio
-async def test_get_by_id_conta_nao_encontrada(account_service_mocked):
-    # 1. Configuração do Mock do Repositório usando AsyncMock
-    mock_repo = MagicMock()
-    # Importante: AsyncMock garante que a chamada pode ser aguardada com 'await'
-    mock_repo.search_account = AsyncMock(return_value=None)
+async def test_get_by_id_conta_nao_encontrada():
+    # 1. Cria o mock assíncrono para o repositório de contas
+    mock_account_repo = AsyncMock()
+    
+    # 2. Configura o método assíncrono para retornar None (simulando conta inexistente)
+    mock_account_repo.get_account_by_id.return_value = None
 
-    account_service_mocked.conta_repo = mock_repo
+    # 3. Injeta o mock no ContaService
+    account_service = ContaService(db_session=None, conta_repo=mock_account_repo)
 
-    # 2. Asserção da Exceção
+    # 4. Asserção da exceção de domínio esperada
     with pytest.raises(ContaNaoEncontradaException):
-        await account_service_mocked.get_by_id(id_conta=999)
+        await account_service.get_by_id(id_conta=999)
 
-    # 3. Validação do Mock
-    account_service_mocked.conta_repo.search_account.assert_called_once_with(999)
+    # 5. Valida a chamada do repositório
+    mock_account_repo.get_account_by_id.assert_called_once_with(999)

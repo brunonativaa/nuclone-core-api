@@ -2,11 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
-from src.modules.account.service import (
-    ContaService, 
-    ClienteNaoEncontradoException, 
-    ContaNaoEncontradaException
-    )
+from src.modules.account.service import ContaService
+from src.modules.account.exceptions import ClienteNaoEncontradoException,ContaNaoEncontradaException
 from src.modules.account.schema import (
     AccountCreateInput,
     AccountCreatedResponse,
@@ -24,20 +21,25 @@ status_code=status.HTTP_201_CREATED,
 
 async def create_account(
     payload: AccountCreateInput, 
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     service = ContaService(db)
     try:
         # 1. Executa a regra de negócio na camada de serviço
-        nova_conta = await service.create_account(payload)
+        nova_conta = await service.create_account(
+            id_cliente=payload.id_cliente,
+            agencia=payload.agencia,
+            tipo_conta=payload.tipo_conta
+        )
 
         # Converte a model do SQLAlchemy para o Schema Pydantic explicitamente
         conta_dto = AccountOutput.model_validate(nova_conta)
 
-        return {
-            "message": "Conta bancária criada com sucesso!",
-            "account": conta_dto
-        }
+        return AccountCreatedResponse(
+            message="Conta bancária criada com sucesso!",
+            account= conta_dto
+        )
+        
     except ClienteNaoEncontradoException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

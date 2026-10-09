@@ -24,12 +24,17 @@ class ContaService:
 
     async def create_account(self, id_cliente: int, agencia: str = "0001", tipo_conta: str = "PF") -> ContaModel:
         # Gera um número de conta único de 6 dígitos
-            num_conta = str(random.randint(100000, 999999))
+
+            customer = await self.cliente_repo.get_by_id(id_cliente)
+            if not customer:
+                raise ClienteNaoEncontradoException(id_cliente)
+
+            num_account = str(random.randint(100000, 999999))
 
             conta = await self.conta_repo.create_account(
                 id_cliente=id_cliente,
                 agencia=agencia,
-                num_conta=num_conta,
+                num_conta=num_account,
                 tipo_conta=tipo_conta,
             )
 
@@ -39,10 +44,10 @@ class ContaService:
             return conta
 
     async def create_balance(self, id_conta: int) -> SaldoContaModel:
-        saldo = SaldoContaModel(id_conta=id_conta, saldo_disponivel=Decimal("0.00"))
-        self.db.add(saldo)
-        await self.db.flush()
-        return saldo    
+            return await self.conta_repo.create_balance(
+                id_conta=id_conata,
+                saldo_inicial=Decimal("0.00")
+            ) 
 
     async def get_by_id(self, id_conta: int) -> ContaModel:
         conta = await self.conta_repo.get_account_by_id(id_conta)

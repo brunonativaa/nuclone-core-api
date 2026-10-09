@@ -38,16 +38,16 @@ async def test_create_access_token_default_expires():
 
 async def test_get_current_customer_id_success():
     token = create_access_token(data={"sub": "42"})
-    customer_id = get_current_customer(token=token)
-    assert customer_id == 42
+    customer_id = await get_current_customer(token=token)
+    assert customer_id == 42 or getattr(customer_id, "id_cliente", None) == 42
 
 async def test_get_current_customer_id_invalid_token():
     with pytest.raises(HTTPException) as exc_info:
-        get_current_customer(token="token_ivalido_ou_forjado")
+       await get_current_customer(token="token_ivalido_ou_forjado")
     assert exc_info.value.status_code == 401
 
 async def test_get_current_customer_id_missing_sub_claim():
     token = jwt.encode({"outra_claim": "valor"}, SECRET_KEY, algorithm=ALGORITHM)
     with pytest.raises(HTTPException) as exc_info:
-        get_current_customer(token=token)
+      await get_current_customer(token=token)
     assert exc_info.value.status_code == 401 

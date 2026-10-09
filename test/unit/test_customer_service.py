@@ -82,10 +82,10 @@ async def test_create_customer_missing_password_or_pin_should_fail(db_session, v
 
 
 async def test_get_customer_by_non_existing_id_should_fail(db_session):
-    cliente_repo = ClienteRepository(db_session)
+    customer_service = ClienteService(db_session)
 
     with pytest.raises(ClienteNaoEncontradoException) as exc_info:
-        await cliente_repo.get_by_id(id_cliente=999999)
+        await customer_service.get_by_id(id_cliente=999999)
 
     assert "Cliente 999999 não encontrado" in str(exc_info.value)
 
