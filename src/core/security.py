@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import or_
 
 from src.core.config import settings
 from src.core.database import get_db
@@ -80,22 +81,22 @@ async def get_current_customer(
     except JWTError:
         raise credentials_exception
 
-    
     if not isinstance(db, AsyncSession):
-        # Se o payload.sub for numérico (ID do cliente), retorna o ID diretamente para testes unitários leves
         if str(sub).isdigit():
             return int(sub)
         raise credentials_exception
 
-    # Se uma sessão de banco válida foi fornecida, busca no banco por CPF ou ID
-    cpf_limpo = "".join(filter(str.isdigit, str(sub)))
+    # Higieniza o valor de sub para busca numérica ou string limpa
+    sub_str = str(sub).strip()
+    sub_limpo = "".join(filter(str.isdigit, sub_str))
 
-    if cpf_limpo:
-        query = select(ClienteModel).where(ClienteModel.cpf == cpf_limpo)
-    elif str(sub).isdigit():
-        query = select(ClienteModel).where(ClienteModel.id_cliente == int(sub))
+    # Busca resiliente: tenta encontrar tanto por ID (se for numérico) quanto por CPF
+    if sub_limpo.isdigit() and len(sub_limpo) <= 5:
+        # Se for um número curto, tratamos como ID do cliente
+        query = select(ClienteModel).where(ClienteModel.id_cliente == int(sub_limpo))
     else:
-        raise credentials_exception
+        # Caso contrário (como o CPF de 11 dígitos), consultamos estritamente pela coluna CPF
+        query = select(ClienteModel).where(ClienteModel.cpf == sub_str)
 
     result = await db.execute(query)
     cliente = result.scalar_one_or_none()
@@ -104,4 +105,3 @@ async def get_current_customer(
         raise credentials_exception
 
     return cliente
-

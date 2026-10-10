@@ -31,7 +31,7 @@ class ContaService:
 
             num_account = str(random.randint(100000, 999999))
 
-            conta = await self.conta_repo.create_account(
+            account = await self.conta_repo.create_account(
                 id_cliente=id_cliente,
                 agencia=agencia,
                 num_conta=num_account,
@@ -39,9 +39,10 @@ class ContaService:
             )
 
             # Inicializa o registro de saldo na tabela correspondente
-            await self.conta_repo.create_balance(id_conta=conta.id_conta, saldo_inicial=Decimal("0.00"))
-
-            return conta
+            await self.conta_repo.create_balance(id_conta=account.id_conta, saldo_inicial=Decimal("0.00"))
+            await self.db.commit()
+            await self.db.refresh(account)
+            return account
 
     async def create_balance(self, id_conta: int) -> SaldoContaModel:
             return await self.conta_repo.create_balance(

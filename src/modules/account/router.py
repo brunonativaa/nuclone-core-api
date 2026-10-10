@@ -59,7 +59,7 @@ async def create_account(
 )
 async def get_account_by_id(
     id_conta: int, 
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     service = ContaService(db)
     try:
@@ -84,7 +84,7 @@ async def get_account_by_id(
 )
 async def get_account_balance(
     id_conta: int, 
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
 
     service = ContaService(db)
