@@ -67,4 +67,10 @@ ALTER TABLE
 ADD
     CONSTRAINT transacao_id_conta_destino_fk FOREIGN key (id_conta_destino) REFERENCES contas(id_conta) ON DELETE CASCADE;
 
+ALTER TABLE
+    auth_credenciais
+ADD
+    CONSTRAINT fk_auth_cliente FOREIGN KEY (id_cliente) REFERENCES clientes (id_cliente) ON DELETE CASCADE,
+ADD 
+    CONSTRAINT  uk_auth_cliente UNIQUE (id_cliente);  
 

@@ -1,17 +1,17 @@
 from datetime import datetime
-from tping import Optional
+from typing import Optional
 from sqlalchemy import String, DateTime, ForeignKey, Integer, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 
 
 class AuthModel(Base):
-    __tablename__ = "auth_credencials"
+    __tablename__ = "auth_credenciais"
 
     id_auth: Mapped[int] = mapped_column(
         Integer, primary_key=True, autoincrement=True)
     id_cliente: Mapped[int] = mapped_column(ForeignKey(
-        "cliente.id_cliente"), ondelete="CASCADE", unique=True, nullable=False)
+        "clientes.id_cliente", ondelete="CASCADE"),  unique=True, nullable=False)
     senha_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     pin_transacao_hash: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=False)
@@ -29,4 +29,4 @@ class AuthModel(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    cliente = relationship("ClienteModel", back_populates="auth_credencials")
+    cliente = relationship("ClienteModel", back_populates="auth_credenciais")

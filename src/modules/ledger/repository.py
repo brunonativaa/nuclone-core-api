@@ -2,8 +2,8 @@ from decimal import Decimal
 from datetime import datetime
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from sqlalchemy import select, func, or_
-
 from src.modules.ledger.model import TransacaoModel, StatusTransacaoEnum
 
 
@@ -52,10 +52,7 @@ class LedgerRepository:
         fim: datetime,
         is_noturno: Optional[bool] = None
     ) -> Decimal:
-        """
-        Soma o total transacionado (saídas/débitos) dentro de uma janela de tempo específica.
-        Utilizado para validação de limites diários e limites noturnos do Pix.
-        """
+       
         # Filtros base obrigatórios
         conditions = [
             TransacaoModel.id_conta_origem == id_conta,
@@ -65,7 +62,7 @@ class LedgerRepository:
         ]
 
         # Filtro condicional caso a flag de limite noturno seja enviada
-        if is_noturno is not None and hasattr(TransacaoModel, "is_noturno"):
+        if is_noturno is not None:
             conditions.append(TransacaoModel.is_noturno == is_noturno)
 
         stmt = select(
@@ -73,6 +70,6 @@ class LedgerRepository:
         ).where(*conditions)
 
         result = await self.db.execute(stmt)
-        resultado = result.scalar()
+        total = result.scalar()
+        return total if total is not None else Decimal("0.00")
 
-        return Decimal(str(resultado)) if resultado is not None else Decimal("0.00")

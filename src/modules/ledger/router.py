@@ -2,7 +2,6 @@ from typing import List
 from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
 from src.core.database import get_db
 from src.core.security import get_current_customer
 from src.modules.ledger.schema import ExtratoItemSchema
@@ -18,10 +17,7 @@ async def get_current_account(
     current_user: ClienteModel = Depends(get_current_customer),
     db: AsyncSession = Depends(get_db)
 ) -> ContaModel:
-    """
-    Garante que o cliente autenticado possui uma conta válida ativa.
-    Evita repetição de código (DRY) entre os endpoints do Ledger.
-    """
+   
     query = select(ContaModel).where(
         ContaModel.id_cliente == current_user.id_cliente)
     result = await db.execute(query)
@@ -39,17 +35,13 @@ async def get_current_account(
 
 @router.get("/extrato", response_model=List[ExtratoItemSchema])
 async def get_bank_extract(
-    limit: int = Query(
-        20, ge=1, le=100, description="Quantidade máxima de registros"),
-    offset: int = Query(0, ge=0, description="Página/Offset da paginação"),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     conta: ContaModel = Depends(get_current_account),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Retorna o extrato de lançamentos no Ledger do cliente autenticado com suporte a paginação.
-    """
-    repo = LedgerRepository(db)
-    return await repo.get_extrato_by_conta(id_conta=conta.id_conta, limit=limit, offset=offset)
+    service = LedgerService(LedgerRepository(db))
+    return await service.obter_extrato(conta.id_conta, limit, offset)
 
 
 @router.get("/transacoes/{id_transacao}", response_model=ExtratoItemSchema)
@@ -58,9 +50,6 @@ async def get_transaction(
     conta: ContaModel = Depends(get_current_account),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Recupera um lançamento específico do Ledger, validando se pertence à conta do usuário autenticado.
-    """
     repo = LedgerRepository(db)
     transacao = await repo.get_by_id(id_transacao)
 

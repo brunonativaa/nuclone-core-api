@@ -5,6 +5,7 @@ from typing import Union
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.modules.limits.model import LimiteContaModel
 from src.modules.account.model import ContaModel, SaldoContaModel
 from src.modules.account.repository import ContaRepository
 from src.modules.account.schema import AccountCreateInput
@@ -40,8 +41,17 @@ class ContaService:
 
             # Inicializa o registro de saldo na tabela correspondente
             await self.conta_repo.create_balance(id_conta=account.id_conta, saldo_inicial=Decimal("0.00"))
+
+            new_limite = LimiteContaModel(
+                id_conta=account.id_conta,
+                limite_diario=Decimal("5000.00"),
+                limite_noturno=Decimal("1000.00")
+            )
+            self.db.add(new_limite)
+
             await self.db.commit()
             await self.db.refresh(account)
+           
             return account
 
     async def create_balance(self, id_conta: int) -> SaldoContaModel:

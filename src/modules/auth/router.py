@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from src.core.database import get_db
 from src.core.security import create_access_token, verify_password
 from src.modules.auth.schema import LoginSchema, TokenSchema
+from src.modules.auth.model import AuthModel
 from src.modules.customer.model import ClienteModel
 
 router = APIRouter(tags=["Autentificação"])
@@ -27,13 +29,15 @@ async def login(
     result = await db.execute(query)
     cliente = result.scalar_one_or_none()
 
+    # 2. Validação da existência do cliente e conferência do hash da senha
     if not cliente or not verify_password(form_data.password, cliente.senha_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="CPF ou senha invalidos.",
+            detail="CPF ou senha inválidos.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # 3. Emissão do token JWT com o identificador do cliente no payload
     access_token = create_access_token(data={"sub": str(cliente.cpf)})
 
     return {

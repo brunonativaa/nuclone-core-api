@@ -26,6 +26,13 @@ class ClienteModel(Base):
         "EnderecoModel", back_populates="cliente")
     telefone: Mapped[list["TelefoneModel"]] = relationship(
         "TelefoneModel", back_populates="cliente", cascade="all, delete-orphan")
+   
+    auth_credenciais = relationship(
+        "AuthModel", 
+        back_populates="cliente", 
+        uselist=False, 
+        cascade="all, delete-orphan"
+    )
 
 
 class TipoNumeroEnum(str, enum.Enum):
