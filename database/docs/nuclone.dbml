@@ -1,6 +1,4 @@
-// ==========================================
-// ENUMS (Tipos Enumerados)
-// ==========================================
+// === ENUMS (Tipos customizados do PostgreSQL) ===
 
 Enum tipo_num {
   CELULAR
@@ -35,16 +33,14 @@ Enum tipo_chave_pix {
   ALEATORIA
 }
 
-// ==========================================
-// TABELAS
-// ==========================================
+// === TABELAS ===
 
 Table clientes {
-  id_cliente integer [pk, increment]
+  id_cliente serial [pk]
   nome varchar(100) [not null]
-  cpf varchar(11) [not null, unique, note: '11 dígitos numéricos / Maior de idade (+18)']
+  cpf varchar(11) [unique, not null]
   sexo char(1)
-  email varchar(100) [not null, unique]
+  email varchar(100) [unique, not null]
   senha_hash varchar(255) [not null]
   pin_transacao_hash varchar(255) [not null]
   data_nascimento date [not null]
@@ -52,88 +48,90 @@ Table clientes {
 }
 
 Table telefones {
-  id_telefone integer [pk, increment]
+  id_telefone serial [pk]
   id_cliente integer [not null]
   numero varchar(15) [not null]
   tipo tipo_num [not null, default: 'CELULAR']
 }
 
 Table enderecos {
-  id_endereco integer [pk, increment]
+  id_endereco serial [pk]
   id_cliente integer [not null]
   estado varchar(2) [not null]
   cidade varchar(100) [not null]
   bairro varchar(100) [not null]
   rua varchar(150) [not null]
-  cep varchar(8) [not null, note: '8 dígitos numéricos']
+  cep varchar(8) [not null]
   num varchar(10) [not null]
 }
 
 Table contas {
-  id_conta integer [pk, increment]
+  id_conta serial [pk]
   id_cliente integer [not null]
-  num_conta varchar(20) [not null, unique]
+  num_conta varchar(20) [unique, not null]
   tipo_conta tipo_de_conta [not null, default: 'PF']
   agencia varchar(10) [not null, default: '0001']
   created_at timestamp [default: `CURRENT_TIMESTAMP`]
 }
 
 Table saldo_contas {
-  id_saldo_conta integer [pk, increment]
-  id_conta integer [not null, unique]
-  saldo_disponivel decimal(15,2) [not null, note: 'saldo_disponivel >= 0.00']
+  id_saldo_conta serial [pk]
+  id_conta integer [unique, not null]
+  saldo_disponivel decimal(15,2) [not null]
   saldo_bloqueado decimal(15,2) [not null, default: 0.00]
   ultima_atualizacao timestamp [default: `CURRENT_TIMESTAMP`]
 }
 
 Table limites_contas {
-  id_limite integer [pk, increment]
-  id_conta integer [not null, unique]
-  limite_diario decimal(15,2) [not null, default: 5000.00, note: 'limite_diario >= 0.00']
-  limite_noturno decimal(15,2) [not null, default: 1000.00, note: 'limite_noturno >= 0.00']
+  id_limite serial [pk]
+  id_conta integer [unique, not null]
+  limite_diario decimal(15,2) [not null, default: 5000.00]
+  limite_noturno decimal(15,2) [not null, default: 1000.00]
   updated_at timestamp [default: `CURRENT_TIMESTAMP`]
 }
 
-Table chaves_pix {
-  id_chave integer [pk, increment]
-  id_conta int [not null]
-  tipo_chave tipo_chave_pix [not null]
-  valor_chave varchar(255) [not null, unique]
-  created_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
-
-  Indexes {
-    valor_chave [name: 'idx_chaves_pix_valor']
-  }
-}
-
 Table transacao {
-  id_transacao integer [pk, increment]
+  id_transacao serial [pk]
   id_conta_origem integer [not null]
   id_conta_destino integer [not null]
   tipo_transacao tipo_de_transacao [not null, default: 'PIX']
-  valor decimal(15,2) [not null, note: 'valor > 0.00']
+  valor decimal(15,2) [not null]
   status tipo_de_status [not null, default: 'CONCLUIDO']
   is_noturno boolean [not null, default: false]
   created_at timestamp [default: `CURRENT_TIMESTAMP`]
-
-  Indexes {
-    (id_conta_origem, created_at) [name: 'idx_transacao_origem_data']
-    (id_conta_destino, created_at) [name: 'idx_transacao_destino_data']
-    (id_conta_origem, status, is_noturno, created_at) [name: 'idx_transacao_limites_janela']
-  }
 }
 
-// ==========================================
-// RELACIONAMENTOS (Foreign Keys)
-// ==========================================
+Table auth_credenciais {
+  id_auth serial [pk]
+  id_cliente int [unique, not null] // Unique adicionado conforme imagem 3
+  senha_hash varchar(255) [not null]
+  pin_transacao_hash varchar(255)
+  tentativas_falhas_login int [not null, default: 0]
+  tentativas_falhas_pin int [not null, default: 0]
+  conta_bloqueada boolean [not null, default: false]
+  ultimo_login timestamptz
+  created_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+}
 
-Ref: clientes.id_cliente < telefones.id_cliente [delete: cascade]
-Ref: clientes.id_cliente < enderecos.id_cliente [delete: cascade]
-Ref: clientes.id_cliente < contas.id_cliente [delete: cascade]
+Table chaves_pix {
+  id_chave serial [pk]
+  id_conta int [not null]
+  tipo_chave tipo_chave_pix [not null]
+  valor_chave varchar(255) [unique, not null]
+  created_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+}
 
-Ref: contas.id_conta - saldo_contas.id_conta [delete: cascade]
-Ref: contas.id_conta - limites_contas.id_conta [delete: cascade]
-Ref: contas.id_conta < chaves_pix.id_conta [delete: cascade]
+// === RELACIONAMENTOS (Chaves Estrangeiras) ===
 
-Ref: contas.id_conta < transacao.id_conta_origem [delete: cascade]
-Ref: contas.id_conta < transacao.id_conta_destino [delete: cascade]
+Ref: telefones.id_cliente > clientes.id_cliente [delete: cascade]
+Ref: enderecos.id_cliente > clientes.id_cliente [delete: cascade]
+Ref: contas.id_cliente > clientes.id_cliente [delete: cascade]
+Ref: auth_credenciais.id_cliente - clientes.id_cliente [delete: cascade]
+
+Ref: saldo_contas.id_conta - contas.id_conta [delete: cascade]
+Ref: limites_contas.id_conta - contas.id_conta [delete: cascade]
+Ref: chaves_pix.id_conta > contas.id_conta [delete: cascade]
+
+Ref: transacao.id_conta_origem > contas.id_conta [delete: cascade]
+Ref: transacao.id_conta_destino > contas.id_conta [delete: cascade]
