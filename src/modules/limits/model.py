@@ -13,11 +13,11 @@ class LimiteContaModel(Base):
     id_conta: Mapped[int] = mapped_column(ForeignKey(
         "contas.id_conta", ondelete="CASCADE"), unique=True, nullable=False)
     limite_diario: Mapped[Decimal] = mapped_column(
-        Numeric(15, 2), default=Decimal("5000.00"))
-    limite_noturno: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), default=Decimal("1000.00"))
+    limite_noturno: Mapped[Decimal] = mapped_column(
+        Numeric(15, 2), default=Decimal("200.00"))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    conta: Mapped["ContaModel"] = relationship(
+    conta: Mapped["ContaModel"] = relationship( # type: ignore
         "ContaModel", back_populates="limites")

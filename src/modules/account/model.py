@@ -1,5 +1,6 @@
 import enum
 from datetime import datetime, timezone
+from sqlalchemy import DateTime, TIMESTAMP
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional, List
 from sqlalchemy import String, ForeignKey, Numeric, DateTime, Enum as SQLEnum
@@ -29,12 +30,14 @@ class ContaModel(Base):
     num_conta: Mapped[str] = mapped_column(
         String(20), nullable=False, unique=True)
     tipo_conta: Mapped[TipoContaEnum] = mapped_column(
-        SQLEnum(TipoContaEnum), nullable=False, default=TipoContaEnum.PF)
+        SQLEnum(TipoContaEnum, name="tipo_de_conta"), nullable=False, default=TipoContaEnum.PF)
     agencia: Mapped[str] = mapped_column(
         String(10), default="0001", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-
+        TIMESTAMP(timezone=True), 
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
     cliente: Mapped["ClienteModel"] = relationship(
         "ClienteModel", back_populates="contas")
     saldo: Mapped["SaldoContaModel"] = relationship("SaldoContaModel", back_populates="conta",

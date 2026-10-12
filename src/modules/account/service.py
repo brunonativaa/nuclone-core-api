@@ -1,81 +1,111 @@
+from typing import Optional
+from decimal import Decimal
 import random
+from typing import Union
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.modules.limits.model import LimiteContaModel
 from src.modules.account.model import ContaModel, SaldoContaModel
 from src.modules.account.repository import ContaRepository
 from src.modules.account.schema import AccountCreateInput
+from src.modules.account.exceptions import ContaNaoEncontradaException, ClienteNaoEncontradoException
+from src.modules.pix.exceptions import SaldoInsuficienteException
 from src.modules.customer.repository import ClienteRepository
 
-
-class ContaNaoEncontradaException(Exception):
-    pass
-
-
-class ClienteNaoEncontradoException(Exception):
-    pass
 
 
 class ContaService:
 
-    def __init__(self, db):
-        self.db = db
-        self.conta_repo = ContaRepository(db)
-        self.cliente_repo = ClienteRepository(db)
+    def __init__(self, db_session: AsyncSession, conta_repo: Optional[ContaRepository] = None, cliente_repo: Optional[ClienteRepository] = None):
 
-    def _gerar_num_conta(self) -> str:
-            return str(random.randint(100000, 999999))
-    
-    def create_account(self, data_conta) -> ContaModel:
-            # Conversão polimórfica: aceita Pydantic DTO ou dict
-            payload = (
-                data_conta.model_dump()
-                if isinstance(data_conta, BaseModel)
-                else data_conta.copy()
+        self.db = db_session 
+        self.conta_repo = conta_repo or ContaRepository(db_session)
+        self.cliente_repo = cliente_repo or ClienteRepository(db_session)
+
+    async def create_account(self, id_cliente: int, agencia: str = "0001", tipo_conta: str = "PF") -> ContaModel:
+        # Gera um número de conta único de 6 dígitos
+
+            customer = await self.cliente_repo.get_by_id(id_cliente)
+            if not customer:
+                raise ClienteNaoEncontradoException(id_cliente)
+
+            num_account = str(random.randint(100000, 999999))
+
+            account = await self.conta_repo.create_account(
+                id_cliente=id_cliente,
+                agencia=agencia,
+                num_conta=num_account,
+                tipo_conta=tipo_conta,
             )
 
-            id_cliente = payload.get("id_cliente")
+            # Inicializa o registro de saldo na tabela correspondente
+            await self.conta_repo.create_balance(id_conta=account.id_conta, saldo_inicial=Decimal("0.00"))
 
-            # 1. Validação da Regra de Negócio
-            cliente = self.cliente_repo.get_by_id(id_cliente)
-            if not cliente:
-                raise ClienteNaoEncontradoException(f"Cliente {id_cliente} não encontrado.")
-
-            # 2. Regras de preenchimento (Defensive Default Values)
-            if not payload.get("num_conta"):
-                payload["num_conta"] = self._gerar_num_conta()
-
-            if not payload.get("agencia"):
-                payload["agencia"] = "0001"
-
-            try:
-                # 3. Transação Atômica
-                nova_conta = self.conta_repo.create_account(payload)
-                self.conta_repo.create_saldo(nova_conta.id_conta)
-
-                self.db.commit()
-                self.db.refresh(nova_conta)
-
-                # Retorna estritamente a entidade do ORM
-                return nova_conta
-
-            except Exception as e:
-                self.db.rollback()
-                raise e
-            
-    def get_by_id(self, id_conta: int) -> ContaModel:
-        account = self.conta_repo.search_account(id_conta)
-        if not account:
-            raise ContaNaoEncontradaException(
-                f"Conta com ID {id_conta} não encontrada."
+            new_limite = LimiteContaModel(
+                id_conta=account.id_conta,
+                limite_diario=Decimal("5000.00"),
+                limite_noturno=Decimal("1000.00")
             )
-        return account
+            self.db.add(new_limite)
 
-    def get_saldo(self, id_conta: int) -> SaldoContaModel:
-        conta = self.conta_repo.search_account(id_conta)
+            await self.db.commit()
+            await self.db.refresh(account)
+           
+            return account
+
+    async def create_balance(self, id_conta: int) -> SaldoContaModel:
+            return await self.conta_repo.create_balance(
+                id_conta=id_conata,
+                saldo_inicial=Decimal("0.00")
+            ) 
+
+    async def get_by_id(self, id_conta: int) -> ContaModel:
+        conta = await self.conta_repo.get_account_by_id(id_conta)
+       
         if not conta:
-            raise ContaNaoEncontradaException(f"A conta com ID {id_conta} não foi encontrada.")
-        
-        # Se a conta existe mas a tabela de saldo ainda não foi inicializada
-        if not conta.saldo:
-            return SaldoContaModel(id_conta=id_conta, saldo_disponivel=0.00)
+            raise ContaNaoEncontradaException(id_conta)
+        return conta
 
-        return conta.saldo
+    async def get_balance(self, id_conta: int) -> SaldoContaModel:
+        # 1. Garante que a conta existe
+        await self.get_by_id(id_conta)
+
+        # 2. Busca saldo
+        saldo = await self.conta_repo.get_balance(id_conta)
+
+        # 3. Fallback: cria saldo se não existir
+        if not saldo:
+            saldo = await self.conta_repo.create_balance(id_conta, saldo_inicial=Decimal("0.00"))
+            await self.db.commit()
+            await self.db.refresh(saldo)
+
+        return saldo
+
+    async def credit(self, id_conta: int, valor: Decimal) -> SaldoContaModel:
+       
+        if valor <= Decimal("0.00"):
+            raise ValueError("O valor adicionado deve ser maior que zero.")
+
+        saldo = await self.get_balance(id_conta)
+        novo_saldo = saldo.saldo_disponivel + valor
+        
+        saldo_atualizado = await self.conta_repo.update_balance_value(saldo, novo_saldo)
+        return saldo_atualizado
+
+    async def debit_with_lock(self, id_conta: int, valor: Decimal) -> SaldoContaModel:
+       
+        if valor <= Decimal("0.00"):
+            raise ValueError("O valor do débito deve ser maior que zero.")
+
+        # Busca com bloqueio pessimista
+        saldo = await self.conta_repo.get_balance_for_update(id_conta)
+        if not saldo:
+            raise ContaNaoEncontradaException(id_conta)
+
+        # Validação da regra de negócio
+        if saldo.saldo_disponivel < valor:
+            raise SaldoInsuficienteException("Saldo insuficiente para realizar a transação.")
+
+        novo_saldo = saldo.saldo_disponivel - valor
+        return await self.conta_repo.update_balance_value(saldo, novo_saldo)

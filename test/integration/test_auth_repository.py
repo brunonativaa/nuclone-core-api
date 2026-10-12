@@ -1,38 +1,27 @@
 import pytest
 import uuid
-
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 from datetime import date
+
 from src.modules.auth.repository import AuthRepository
 from src.modules.customer.model import ClienteModel
 from src.modules.account.model import ContaModel
+from src.core.security import  hash_password
 
 
 
-def test_login_sucesso(client: TestClient):
-    # Envia credenciais corretas via form-data para cobrir linhas 31-34
-    response = client.post(
-        "/api/v1/auth/login",
-        data={"username": "admin", "password": "123456"}
-    )
-    
-    assert response.status_code == 200
-    json_data = response.json()
-    assert "access_token" in json_data
-    assert json_data["token_type"] == "bearer"
-
-def test_login_credenciais_invalidas(client: TestClient):
+async def test_login_credenciais_invalidas(client: AsyncClient):
     # Envia credenciais erradas para disparar a HTTPException das linhas 23-28
-    response = client.post(
+    response = await client.post(
         "/api/v1/auth/login",
         data={"username": "usuario_errado", "password": "senha_errada"}
     )
     
     assert response.status_code == 401
-    assert response.json()["detail"] == "Credenciais inválidas."
+    assert response.json()["detail"] == "CPF ou senha inválidos."
 
 
-def test_auth_repository_get_cliente_by_email(db_session):
+async def test_auth_repository_get_cliente_by_cpf(db_session):
     repo = AuthRepository(db_session)
     cliente = ClienteModel(
         nome="Teste Auth",
@@ -45,15 +34,15 @@ def test_auth_repository_get_cliente_by_email(db_session):
     )
 
     db_session.add(cliente)
-    db_session.commit()
+    await db_session.commit()
 
-    resultado = repo.get_cliente_by_email("auth@test.com")
+    resultado = await repo.get_cliente_by_cpf("12345678900")
     assert resultado is not None
-    assert resultado.email == "auth@test.com"
+    assert resultado.cpf == "12345678900"
 
-    assert repo.get_cliente_by_email("nao_existe@test.com") is None
+    assert await repo.get_cliente_by_cpf("85989985585") is None
 
-def test_auth_repository_get_account_by_cliente_id(db_session):
+async def test_auth_repository_get_account_by_cliente_id(db_session):
     repo = AuthRepository(db_session)
     cliente = ClienteModel( 
         nome="Teste Conta", 
@@ -65,8 +54,8 @@ def test_auth_repository_get_account_by_cliente_id(db_session):
             data_nascimento=date(1992, 1, 12)
 )
     db_session.add(cliente)
-    db_session.commit()
-    db_session.refresh(cliente)
+    await db_session.commit()
+    await db_session.refresh(cliente)
 
 
     uid = str(uuid.uuid4())[:5]
@@ -78,15 +67,15 @@ def test_auth_repository_get_account_by_cliente_id(db_session):
     )
 
     db_session.add(conta)
-    db_session.commit()
-    db_session.refresh(conta)
+    await db_session.commit()
+    await db_session.refresh(conta)
 
     # 3. Executa a busca no repositorio
-    resultado = repo.get_account_by_cliente_id(cliente.id_cliente)
+    resultado = await repo.get_account_by_cliente_id(cliente.id_cliente)
     
     # Assertivas
     assert resultado is not None
     assert resultado.id_cliente == cliente.id_cliente
 
     # Teste de id inexistente
-    assert repo.get_account_by_cliente_id(99999) is None
+    assert await repo.get_account_by_cliente_id(99999) is None

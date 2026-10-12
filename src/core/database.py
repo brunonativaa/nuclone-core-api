@@ -1,31 +1,56 @@
 import os
+from typing import AsyncGenerator
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.pool import StaticPool
 
-# 1. Carrega as variáveis do arquivo .env PRIMEIRO
 load_dotenv()
 
-# 2. Garante fallback caso a variável VENHA VAZIA ("") ou seja NULA (None)
 DEFAULT_DB_URL = "postgresql://postgres:postgrespassword@localhost:5432/core_banking"
-DATABASE_URL = os.getenv("DATABASE_URL") or DEFAULT_DB_URL
+RAW_DATABASE_URL = os.getenv("DATABASE_URL") or DEFAULT_DB_URL
 
-# 3. Cria a engine com a URL tratada
-engine = create_engine(DATABASE_URL, echo=True, future=True)
+# Garantia do driver assíncrono para PostgreSQL
+if RAW_DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = RAW_DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif RAW_DATABASE_URL.startswith("postgresql+psycopg2://"):
+    DATABASE_URL = RAW_DATABASE_URL.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
+else:
+    DATABASE_URL = RAW_DATABASE_URL
 
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
+# Configurações dinâmicas de Engine para suporte a Postgres e SQLite (Pytest)
+engine_kwargs = {"echo": True, "future": True}
+
+if DATABASE_URL.startswith("sqlite"):
+    engine_kwargs.update({
+        "connect_args": {"check_same_thread": False},
+        "poolclass": StaticPool
+    })
+
+engine = create_async_engine(DATABASE_URL, **engine_kwargs)
+
+AsyncSessionLocal = async_sessionmaker(
     bind=engine,
-    future=True
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autoflush=False,
 )
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Dependency Injection do FastAPI para fornecer sessões de banco de dados."""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+#  compatibilidade  injeção de dependência nas rotas
+get_db = get_db_session

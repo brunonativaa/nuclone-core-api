@@ -1,34 +1,46 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from src.core.database import get_db
 from src.core.security import create_access_token, verify_password
-from src.modules.auth.schema import TokenSchema
+from src.modules.auth.schema import LoginSchema, TokenSchema
+from src.modules.auth.model import AuthModel
+from src.modules.customer.model import ClienteModel
 
-router = APIRouter(tags=["Auth"])
+router = APIRouter(tags=["Autentificação"])
 
 
 @router.post("/auth/login", response_model=TokenSchema, status_code=status.HTTP_200_OK)
-def login(
+async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
-    Endpoint OAuth2 compatível com o Swagger UI e clientes HTTP.
-    Recebe os campos 'username' e 'password' via Form Data.
+    Endpoint de login compatível com OAuth2 / Swagger UI.
+    Recebe 'username' (CPF) e 'password' (Senha) via Form Data.
     """
-    # Exemplo de validação local para testes de integração
-    # Em produção: buscar usuário pelo CPF/E-mail no banco e comparar hash
-    if form_data.username != "admin" or form_data.password != "123456":
+    # O campo 'username' do Swagger receberá o CPF
+    cpf_limpo = "".join(filter(str.isdigit, form_data.username))
+
+    query = select(ClienteModel).where(ClienteModel.cpf == cpf_limpo)
+    result = await db.execute(query)
+    cliente = result.scalar_one_or_none()
+
+    # 2. Validação da existência do cliente e conferência do hash da senha
+    if not cliente or not verify_password(form_data.password, cliente.senha_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciais inválidas.",
+            detail="CPF ou senha inválidos.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Injeta o identificador da conta no claim 'sub' do JWT
-    id_conta = 1
-    access_token = create_access_token(data={"sub": str(id_conta)})
+    # 3. Emissão do token JWT com o identificador do cliente no payload
+    access_token = create_access_token(data={"sub": str(cliente.cpf)})
 
-    return TokenSchema(access_token=access_token, token_type="bearer")
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }

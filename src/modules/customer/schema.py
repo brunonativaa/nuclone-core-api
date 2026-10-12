@@ -4,10 +4,13 @@ from pydantic import EmailStr, Field, field_validator, ConfigDict
 from src.core.schema import BaseDTO
 from typing import Optional
 
+class Config:
+        from_attributes = True
+        
 
 class ClienteCreateInput(BaseDTO):
 
-    model_config = ConfigDict(from_attributes=True)
+  
     nome: str = Field(..., min_length=3, max_length=100,
                       description="Nome completo")
     cpf:  str = Field(..., min_length=11, max_length=14,
@@ -35,11 +38,11 @@ class ClienteCreateInput(BaseDTO):
 
 
 class ClienteResponse(BaseDTO):
+    model_config = ConfigDict(from_attributes=True)
+
     id_cliente: int = Field(..., description="Indentificador único da conta")
     nome: str = Field(..., description="Nome do cliente")
     cpf: str = Field(...,
                      description="CPF sem pontos ou traços(apenas 11 digitos)")
     email: EmailStr = Field(..., description="E-mail válido do cliente")
 
-    class Config:
-        from_attributes = True

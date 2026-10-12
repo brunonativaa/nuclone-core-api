@@ -1,49 +1,58 @@
 from typing import Optional
+from decimal import Decimal
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.ext.asyncio import AsyncSession 
 from src.modules.account.model import ContaModel, SaldoContaModel
 
 
 class ContaRepository:
 
-    def __init__(self, db: Session):
-        self.db = db
+    def __init__(self, db_session: AsyncSession):
+        self.db = db_session
 
-    def create_account(self, data) -> ContaModel:
-        payload = data.model_dump() if isinstance(data, BaseModel) else data
-        conta = ContaModel(**payload)
+    async def create_account(self, id_cliente: int, agencia: str, num_conta: str, tipo_conta: str = "PF") -> ContaModel:
+        conta = ContaModel(
+            id_cliente=id_cliente,
+            agencia=agencia,
+            num_conta=num_conta,
+            tipo_conta=tipo_conta
+        )
         self.db.add(conta)
-        self.db.flush()
-        self.db.refresh(conta)
+        await self.db.flush()
+        await self.db.refresh(conta)
         return conta
 
-    def create_saldo(self, id_conta: int) -> SaldoContaModel:
-        saldo = SaldoContaModel(id_conta=id_conta, saldo_disponivel=0.00)
+    async def create_balance(self, id_conta: int, saldo_inicial: Decimal = Decimal("0.00")) -> SaldoContaModel:
+        saldo = SaldoContaModel(
+            id_conta=id_conta,
+            saldo_disponivel=saldo_inicial
+        )
         self.db.add(saldo)
-        self.db.flush()
+        await self.db.flush()
         return saldo
 
-    def get_saldo(self, id_conta: int) -> Optional[SaldoContaModel]:
-        stmt = select(SaldoContaModel).where(SaldoContaModel.id_conta == id_conta)
-        saldo = self.db.scalar(stmt)
-    
-    # Se o saldo não for encontrado no banco mas a conta existir, inicializa com 0.00
-        if saldo is None:
-            conta = self.search_account(id_conta)
-            if conta:
-                saldo = SaldoContaModel(
-                    id_conta=id_conta,
-                    saldo_disponivel=0.00,
-                    saldo_bloqueado=0.00,
-                    ultima_atualizacao=datetime.now(timezone.utc)
-            )
-                self.db.add(saldo)
-                self.db.commit()
 
-        return saldo
-    
-    def search_account(self, id_conta: int) -> Optional[ContaModel]:
+    async def get_account_by_id(self, id_conta: int) -> Optional[ContaModel]:
+        return await self.db.get(ContaModel, id_conta)
 
-        return self.db.get(ContaModel, id_conta)
+    async def get_balance(self, id_conta: int) -> Optional[SaldoContaModel]:
+        stmt = select(SaldoContaModel).where(SaldoContaModel.id_conta == id_conta)     
+        return await self.db.scalar(stmt)
+
+    async def get_balance_for_update(self, id_conta: int) -> Optional[SaldoContaModel]:
+        """Aplica Pessimistic Locking (SELECT ... FOR UPDATE no PostgreSQL)."""
+        stmt = (
+            select(SaldoContaModel)
+            .where(SaldoContaModel.id_conta == id_conta)
+            .with_for_update()
+        )
+        return await self.db.scalar(stmt)
+
+    async def update_balance_value(self, saldo_model: SaldoContaModel, novo_valor: Decimal) -> SaldoContaModel:
+        """Apenas atualiza o modelo de saldo na sessão."""
+        saldo_model.saldo_disponivel = novo_valor
+        self.db.add(saldo_model)
+        await self.db.flush()
+        return saldo_model

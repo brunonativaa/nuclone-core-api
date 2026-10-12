@@ -1,62 +1,107 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy import or_
 
-
-SECRET_KEY = "bdsovijrkldlhrgejndsmklçjkdfdserg"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from src.core.config import settings
+from src.core.database import get_db
+from src.modules.customer.model import ClienteModel
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# --- GERENCIAMENTO DE SENHAS ---
 
-def hash_password(password: str) -> str:
-    """Gera o hash seguro da senha usando o algoritmo Bcrypt."""
-    return pwd_context.hash(password)
+# --- GERENCIAMENTO DE SENHAS (NATIVO BCRYPT) ---
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Valida a senha fornecida contra o hash armazenado no banco."""
-    return pwd_context.verify(plain_password, hashed_password)
+    if not plain_password or not hashed_password:
+        return False
+    try:
+        # bcrypt trabalha com bytes; convertemos as strings em UTF-8
+        password_bytes = plain_password.encode("utf-8")
+        hash_bytes = hashed_password.encode("utf-8")
+        return bcrypt.checkpw(password_bytes, hash_bytes)
+    except (ValueError, TypeError):
+        return False
+
+
+def hash_password(password: str) -> str:
+    """Gera o hash seguro da senha usando o algoritmo Bcrypt."""
+    password_bytes = password.encode("utf-8")
+    salt = bcrypt.gensalt(rounds=12)
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode("utf-8")
 
 
 # --- GERENCIAMENTO DE TOKENS JWT ---
 
+
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Gera um token JWT contendo as claims fornecidas (ex: sub contendo o id_conta)."""
+    """Gera um token JWT contendo as claims fornecidas."""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
+        expire = datetime.now(timezone.utc) + \
+            timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# --- INJEÇÃO DE DEPENDÊNCIA DE AUTORIZAÇÃO ---
 
-def get_current_user_id(token: str = Depends(oauth2_scheme)) -> int:
-    """
-    Intercepta a requisição, extrai o Bearer token do header,
-    valida a assinatura JWT e retorna o id_conta autenticado.
-    """
+# --- INJEÇÃO DE DEPENDÊNCIA DE AUTENTICAÇÃO ---
+
+
+async def get_current_customer(
+    token: str = Depends(oauth2_scheme),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> ClienteModel:
+    """Valida o token JWT e retorna o cliente autenticado."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Não foi possível validar as credenciais de acesso.",
+        detail="Não foi possível validar as credenciais",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id_str: str = payload.get("sub")
-        if user_id_str is None:
+        sub: str = payload.get("sub")
+        if not sub:
             raise credentials_exception
-        return int(user_id_str)
-    except (JWTError, ValueError):
+    except JWTError:
         raise credentials_exception
+
+    if not isinstance(db, AsyncSession):
+        if str(sub).isdigit():
+            return int(sub)
+        raise credentials_exception
+
+    # Higieniza o valor de sub para busca numérica ou string limpa
+    sub_str = str(sub).strip()
+    sub_limpo = "".join(filter(str.isdigit, sub_str))
+
+    # Busca resiliente: tenta encontrar tanto por ID (se for numérico) quanto por CPF
+    if sub_limpo.isdigit() and len(sub_limpo) <= 5:
+        # Se for um número curto, tratamos como ID do cliente
+        query = select(ClienteModel).where(ClienteModel.id_cliente == int(sub_limpo))
+    else:
+        # Caso contrário (como o CPF de 11 dígitos), consultamos estritamente pela coluna CPF
+        query = select(ClienteModel).where(ClienteModel.cpf == sub_str)
+
+    result = await db.execute(query)
+    cliente = result.scalar_one_or_none()
+
+    if cliente is None:
+        raise credentials_exception
+
+    return cliente

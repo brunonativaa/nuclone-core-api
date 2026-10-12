@@ -22,6 +22,9 @@ The system is designed as a **Modular Monolith (Package by Feature)**, organizin
 - **Dynamic Operational Limits:** Enforces BACEN-aligned day/night transaction thresholds per customer account.
 - **Stateless Authentication (IAM):** OAuth2 with JWT handles user identity context, securing endpoint routes and enforcing strict account-level data isolation.
 
+### 🔄 Recent Update: Credentials Module (credenciais)
+To decouple sensitive authentication data (password hashes and transactional PINs) from basic customer profile records, the credenciais table was introduced. This modeling choice enhances application security by enforcing strict secret isolation policies, password auditing, and future scalability for Multi-Factor Authentication (MFA).
+
 ---
 
 ## 🛠️ Tech Stack
@@ -37,7 +40,7 @@ The system is designed as a **Modular Monolith (Package by Feature)**, organizin
 ## 📊 Database & Domain Architecture Diagram
 
 <i>image of the diacram</i>
-![Nuclone Diagram](docs/Nuclone-Core.png)
+![Nuclone Diagram](docs/system-nuclone.png)
 
 
 

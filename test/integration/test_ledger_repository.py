@@ -3,11 +3,11 @@ from decimal import Decimal
 from src.modules.ledger.repository import LedgerRepository
 from src.modules.ledger.model import TransacaoModel, StatusTransacaoEnum, TipoTransacaoEnum
 
-def test_ledger_repository_get_by_id_and_extrato(db_session):
+async def test_ledger_repository_get_by_id_and_extrato(db_session):
     repo = LedgerRepository(db_session)
     agora = datetime.utcnow()
 
-    assert repo.get_by_id(id_transacao=99999) is None
+    assert await repo.get_by_id(id_transacao=99999) is None
 
     t1 = TransacaoModel(
         id_conta_origem=1,
@@ -29,16 +29,16 @@ def test_ledger_repository_get_by_id_and_extrato(db_session):
     )
 
     db_session.add_all([t1, t2])
-    db_session.commit()
+    await db_session.commit()
 
-    transacao_db = repo.get_by_id(t1.id_transacao)
+    transacao_db = await repo.get_by_id(t1.id_transacao)
     assert transacao_db is not None
     assert transacao_db.valor == Decimal("150.00")
 
     data_inicio = agora - timedelta(days=3)
     data_fim = agora 
 
-    extrato = repo.get_extrato_by_conta(
+    extrato = await repo.get_extrato_by_conta(
         id_conta=1,
         limit=10,
         offset=0,
@@ -47,7 +47,7 @@ def test_ledger_repository_get_by_id_and_extrato(db_session):
     )
     assert len(extrato) == 2
 
-def test_ledger_repository_get_total_gasto_janela(db_session):
+async def test_ledger_repository_get_total_gasto_janela(db_session):
     repo = LedgerRepository(db_session)
     agora = datetime.now(timezone.utc)
     inicio = agora - timedelta(hours=1)
@@ -76,10 +76,10 @@ def test_ledger_repository_get_total_gasto_janela(db_session):
     )
 
     db_session.add_all([t_concluida, t_noturna])
-    db_session.commit()
+    await db_session.commit()
 
     # Total gasto diurno na janela
-    total_diurno = repo.get_total_gasto_janela(
+    total_diurno = await repo.get_total_gasto_janela(
         id_conta=10,
         inicio=inicio,
         fim=fim,
@@ -88,7 +88,7 @@ def test_ledger_repository_get_total_gasto_janela(db_session):
     assert total_diurno == Decimal("200.00")
 
     # Total gasto em conta sem transações (deve retornar Decimal 0)
-    total_vazio = repo.get_total_gasto_janela(
+    total_vazio = await repo.get_total_gasto_janela(
         id_conta=999,
         inicio=inicio,
         fim=fim,

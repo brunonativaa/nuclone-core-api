@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database import get_db
-from src.modules.pix.service import (
-    PixService,
+from src.modules.limits.exceptions import ExceededLimitException
+
+from src.modules.pix.service import PixService
+from src.modules.pix.exceptions import (
     SaldoInsuficienteException,
     ContaNaoEncontradaException,
     ChavePixDuplicadaException,
@@ -18,10 +20,10 @@ router = APIRouter(tags=["Pix Transactions"])
 
 
 @router.post("/transfer", status_code=status.HTTP_200_OK, response_model=PixTransferOutput)
-def transfer_pix(payload: PixTransferInput, db: Session = Depends(get_db)):
+async def transfer_pix(payload: PixTransferInput, db: AsyncSession = Depends(get_db)):
     service = PixService(db)
     try:
-        transaction = service.make_pix_payment(
+        transaction = await service.make_pix_payment(
             id_conta_origem=payload.id_conta_origem,
             chave_destino=payload.chave_destino,  # Recebe a chave PIX string
             valor=payload.valor
@@ -44,13 +46,22 @@ def transfer_pix(payload: PixTransferInput, db: Session = Depends(get_db)):
             detail=str(e)
         )
 
+    except ExceededLimitException as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "code": "LIMIT_EXCEEDED",
+                "message": str(e)
+            }
+        )
+
 
 @router.post("/keys", status_code=status.HTTP_201_CREATED)
-def create_pix_key(payload: PixKeyCreateInput, db: Session = Depends(get_db)):
+async def create_pix_key(payload: PixKeyCreateInput, db: AsyncSession = Depends(get_db)):
     service = PixService(db)
 
     try:
-        new_key = service.register_pix_key(
+        new_key = await service.register_pix_key(
             id_conta=payload.id_conta,
             key_type=payload.tipo_chave,
             valor_chave=payload.valor_chave

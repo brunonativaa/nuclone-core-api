@@ -22,6 +22,10 @@ O sistema foi desenhado no padrão **Monólito Modular (Package by Feature)**, o
 - **Limites Operacionais Dinâmicos:** Aplicação de regras de limites operacionais diurnos e noturnos por conta do cliente, alinhadas às diretrizes do BACEN.
 - **Autenticação Stateless (IAM):** Integração com OAuth2 e Tokens JWT para contexto de identidade do usuário, protegendo endpoints e garantindo o isolamento de dados entre contas.
 
+
+### 🔄 Atualização Recente: Módulo de Credenciais (credenciais)
+Com o objetivo de desacoplar os dados sensíveis de autenticação (senhas hash e PINs transacionais) das informações cadastrais do cliente, foi implementada a tabela credenciais. Essa modelagem eleva o nível de segurança da aplicação, permitindo políticas estritas de isolamento de segredo, auditoria de senhas e expansão futura para múltiplos fatores de autenticação (MFA).
+
 ---
 
 ## 🛠️ Tecnologias Utilizadas
@@ -37,7 +41,7 @@ O sistema foi desenhado no padrão **Monólito Modular (Package by Feature)**, o
 ## 📊 Diagrama da arquitetura da base de dados e do domínio
 
 <i>Imagem do diagrama</i>
-![Nuclone Diagrama](docs/Nuclone-Core.png)
+![Nuclone Diagrama](docs/system-nuclone.png)
 
 ```mermaid
 graph TD

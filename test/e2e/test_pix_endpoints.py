@@ -10,11 +10,11 @@ def _get_id(conta_or_id) -> int:
 
 
 @pytest.mark.e2e
-def test_edpoint_execute_pix_success(id_conta_origem, chave_pix_destino, client):
+async def test_edpoint_execute_pix_success(account_with_config_limits, id_conta_origem, chave_pix_destino, client):
 
     origem_id = _get_id(id_conta_origem)
 
-    response = client.post(
+    response = await client.post(
         "/api/v1/pix/transfer",
         json={
             "id_conta_origem": origem_id,
@@ -27,21 +27,21 @@ def test_edpoint_execute_pix_success(id_conta_origem, chave_pix_destino, client)
 
 
 @pytest.mark.e2e
-def test_endpoint_execute_pix_saldo_insuficiente_retorne_400(id_conta_origem, chave_pix_destino, client):
-    response = client.post(
+async def test_endpoint_execute_pix_saldo_insuficiente_retorne_400(account_with_config_limits, id_conta_origem, chave_pix_destino, client):
+    response = await client.post(
         "/api/v1/pix/transfer",
         json={
             "id_conta_origem": id_conta_origem,
             "chave_destino": chave_pix_destino,
-            "valor": 999999.00
+            "valor": 2000.00
         }
     )
     assert response.status_code == 400
 
 
 @pytest.mark.e2e
-def test_endpoint_execut_pix_conta_inexistente_retorna_404(id_conta_origem, client):
-    response = client.post(
+async def test_endpoint_execut_pix_conta_inexistente_retorna_404(account_with_config_limits, id_conta_origem, client):
+    response = await client.post(
         "/api/v1/pix/transfer",
         json={
             "id_conta_origem": id_conta_origem,
@@ -53,13 +53,14 @@ def test_endpoint_execut_pix_conta_inexistente_retorna_404(id_conta_origem, clie
 
 
 @pytest.mark.e2e
-def test_endpoint_execute_pix_mesma_conta_retorna_400(id_conta_origem, chave_pix_origem, client):
-    response = client.post(
+async def test_endpoint_execute_pix_mesma_conta_retorna_400(account_with_config_limits, id_conta_origem, chave_pix_origem, client):
+    response = await client.post(
         "/api/v1/pix/transfer",
         json={
             "id_conta_origem": id_conta_origem,
             "chave_destino": chave_pix_origem,
             "valor": 10.50
         }
+        
     )
     assert response.status_code == 400

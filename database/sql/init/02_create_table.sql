@@ -11,7 +11,8 @@ CREATE TABLE clientes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. TABELA TELEFONE
+
+
 CREATE TABLE telefones (
     id_telefone SERIAL PRIMARY KEY,
     id_cliente INTEGER NOT NULL,
@@ -19,7 +20,6 @@ CREATE TABLE telefones (
     tipo tipo_num NOT NULL DEFAULT 'CELULAR'
 );
 
--- 3. TABELA ENDERECO
 CREATE TABLE enderecos (
     id_endereco SERIAL PRIMARY KEY,
     id_cliente INTEGER NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE enderecos (
     num VARCHAR(10) NOT NULL
 );
 
--- 4. TABELA CONTA
+
 CREATE TABLE contas (
     id_conta SERIAL PRIMARY KEY,
     id_cliente INTEGER NOT NULL,
@@ -57,15 +57,6 @@ CREATE TABLE limites_contas (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS chaves_pix (
-    id_chave SERIAL PRIMARY KEY,
-    id_conta INT NOT NULL,
-    tipo_chave tipo_chave_pix NOT NULL,
-    valor_chave VARCHAR(255) NOT NULL UNIQUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-   
-);
-
 CREATE TABLE transacao (
     id_transacao SERIAL PRIMARY KEY,
     id_conta_origem INTEGER NOT NULL,
@@ -76,4 +67,30 @@ CREATE TABLE transacao (
     is_noturno BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+
+CREATE TABLE auth_credenciais (
+    id_auth SERIAL PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    senha_hash VARCHAR(255) NOT NULL,
+    pin_transacao_hash VARCHAR(255) NULL,
+    tentativas_falhas_login INT NOT NULL DEFAULT 0,
+    tentativas_falhas_pin INT NOT NULL DEFAULT 0,
+    conta_bloqueada BOOLEAN NOT NULL DEFAULT FALSE,
+    ultimo_login TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+);    
+
+CREATE TABLE chaves_pix (
+    id_chave SERIAL PRIMARY KEY,
+    id_conta INT NOT NULL,
+    tipo_chave tipo_chave_pix NOT NULL,
+    valor_chave VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+   
+);
+
+
 
