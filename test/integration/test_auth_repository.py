@@ -18,7 +18,7 @@ async def test_login_credenciais_invalidas(client: AssyncClient):
     )
     
     assert response.status_code == 401
-    assert response.json()["detail"] == "CPF ou senha invalidos."
+    assert response.json()["detail"] == "CPF ou senha inválidos."
 
 
 async def test_auth_repository_get_cliente_by_cpf(db_session):

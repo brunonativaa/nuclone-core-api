@@ -3,15 +3,15 @@ import pytest
 
 from src.modules.account.exceptions import (
     ClienteNaoEncontradoException,
-    ContaNaoEncontradaException as AccountContaNaoEncontradaException,
+    ContaNaoEncontradaException,
 )
 from src.modules.account.service import ContaService
-from src.modules.pix.exceptions import ContaNaoEncontradaException
 from src.modules.pix.service import PixService, SaldoInsuficienteException
 
 
+
 @pytest.mark.asyncio
-async def test_perform_pix_nonexistent_source_account(db_session):
+async def test_perform_pix_nonexistent_source_account(db_session, account_with_config_limits):
     service = PixService(db_session)
     nonexistent_account_id = 999999
 
@@ -26,7 +26,7 @@ async def test_perform_pix_nonexistent_source_account(db_session):
 
 
 @pytest.mark.asyncio
-async def test_perform_pix_nonexistent_destination_account(db_session, id_conta_origem):
+async def test_perform_pix_nonexistent_destination_account(db_session,account_with_config_limits, id_conta_origem):
     service = PixService(db_session)
     nonexistent_account_id = 999999
 
@@ -41,7 +41,7 @@ async def test_perform_pix_nonexistent_destination_account(db_session, id_conta_
 
 
 @pytest.mark.asyncio
-async def test_perform_pix_same_account(db_session, id_conta_origem):
+async def test_perform_pix_same_account(db_session, account_with_config_limits, id_conta_origem):
     service = PixService(db_session)
     with pytest.raises(
         ValueError, match="Não é possível realizar transferência PIX para a mesma conta."
@@ -54,18 +54,18 @@ async def test_perform_pix_same_account(db_session, id_conta_origem):
 
 
 @pytest.mark.asyncio
-async def test_adding_balance_invalid_value(db_session, id_conta_origem):
+async def test_adding_balance_invalid_value(db_session, account_with_config_limits, id_conta_origem):
     conta_service = ContaService(db_session)
     with pytest.raises(ValueError, match="O valor adicionado deve ser maior que zero."):
         await conta_service.credit(id_conta_origem, Decimal("-10.00"))
 
 
 @pytest.mark.asyncio
-async def test_adding_balance_nonexistent_account(db_session):
+async def test_adding_balance_nonexistent_account(db_session, account_with_config_limits):
     conta_service = ContaService(db_session)
     nonexistent_account_id = 999999
 
-    with pytest.raises(AccountContaNaoEncontradaException) as exc_info:
+    with pytest.raises(ContaNaoEncontradaException) as exc_info:
         await conta_service.credit(nonexistent_account_id, Decimal("100.00"))
 
     assert exc_info.value.id_conta == nonexistent_account_id
@@ -74,7 +74,7 @@ async def test_adding_balance_nonexistent_account(db_session):
 
 @pytest.mark.asyncio
 async def test_perform_pix_failure_bank_rollback(
-    db_session, id_conta_origem, id_conta_destino, mocker
+    db_session,account_with_config_limits, id_conta_origem, id_conta_destino, mocker
 ):
     service = PixService(db_session)
     conta_service = ContaService(db_session)
@@ -95,7 +95,7 @@ async def test_perform_pix_failure_bank_rollback(
 
 
 @pytest.mark.asyncio
-async def test_adding_balance_to_account(db_session, id_conta_origem):
+async def test_adding_balance_to_account(db_session, account_with_config_limits, id_conta_origem):
     conta_service = ContaService(db_session)
 
     conta_dto = await conta_service.get_balance(id_conta_origem)
@@ -109,7 +109,7 @@ async def test_adding_balance_to_account(db_session, id_conta_origem):
 
 @pytest.mark.asyncio
 async def test_successfully_complete_a_pix_transfer(
-    db_session, id_conta_origem, id_conta_destino
+    db_session, account_with_config_limits, id_conta_origem, id_conta_destino
 ):
     service = PixService(db_session)
     conta_service = ContaService(db_session)
@@ -138,7 +138,7 @@ async def test_successfully_complete_a_pix_transfer(
 
 
 @pytest.mark.asyncio
-async def test_pix_insufficient_funds(db_session, id_conta_origem, id_conta_destino):
+async def test_pix_insufficient_funds(db_session,account_with_config_limits, id_conta_origem, id_conta_destino):
     service = PixService(db_session)
     conta_service = ContaService(db_session)
 

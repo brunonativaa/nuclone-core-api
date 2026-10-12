@@ -1,3 +1,5 @@
+import pytest
+from decimal import Decimal
 from src.modules.limits.repository import LimitesRepository
 from src.modules.limits.model import LimiteContaModel
 
@@ -24,3 +26,4 @@ async def test_limits_repository_get_by_account_and_update(db_session):
     limite_lock = await repo.get_by_conta(id_conta=id_conta_teste, for_update=True)
     assert limite_lock is not None
     assert limite_lock.id_conta == id_conta_teste
+

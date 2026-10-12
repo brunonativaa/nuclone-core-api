@@ -4,6 +4,9 @@ from decimal import Decimal
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from src.modules.limits.service import LimitesService
+from src.modules.limits.repository import LimitesRepository
+from src.modules.ledger.repository import LedgerRepository 
 from src.modules.ledger.model import TransacaoModel, TipoTransacaoEnum
 from src.modules.account.repository import ContaRepository
 from src.modules.account.service import ContaService
@@ -24,6 +27,8 @@ class PixService:
         self.conta_service = ContaService(db)
         self.conta_repo = ContaRepository(db)
         self.pix_repo = PixRepository(db)
+        self.limits_repo = LimitesRepository(db)
+        self.ledger_repo = LedgerRepository(db)
 
 
     async def register_pix_key(self, id_conta: int, key_type: str, valor_chave: Optional[str] = None) -> ChavePixModel:
@@ -84,25 +89,26 @@ class PixService:
             raise ValueError("O valor do Pix deve ser maior que zero.")
 
         # 1. Validação da conta de origem        
-        conta_origem = await self.conta_repo.get_account_by_id(id_conta_origem)
+        conta_origem = await self.conta_service.get_by_id(id_conta_origem)
         if not conta_origem:
             raise ContaNaoEncontradaException(id_conta_origem)
 
+        limites_service = LimitesService(self.limits_repo, self.ledger_repo)
+        await limites_service.validar_e_consumir_limite(
+            id_conta=id_conta_origem,
+            valor=valor_decimal
+        )
 
         # 2. Resolução da conta de destino
         if chave_destino:
             conta_destino_obj = await self.pix_repo.search_account_by_key(chave_destino)
             if not conta_destino_obj:
-                raise ContaNaoEncontradaException(0)
+                raise ContaNaoEncontradaException(id_conta_origem)
             id_conta_destino = conta_destino_obj.id_conta
 
 
         if not id_conta_destino:
-            raise ContaNaoEncontradaException("Conta de destino não informada.")
-
-        conta_destino = await self.conta_repo.get_account_by_id(id_conta_destino)
-        if not conta_destino:
-            raise ContaNaoEncontradaException(id_conta_destino)
+            raise ValueError("Conta de destino não informada.")
 
         if id_conta_origem == id_conta_destino:
             raise ValueError("Não é possível realizar transferência PIX para a mesma conta.")

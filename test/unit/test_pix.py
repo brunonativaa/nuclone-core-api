@@ -7,7 +7,8 @@ from src.modules.account.repository import ContaRepository
 from src.modules.account.service import ContaService
 from src.modules.customer.repository import ClienteRepository
 from src.modules.pix.service import PixService
-from src.modules.pix.exceptions import SaldoInsuficienteException, ContaNaoEncontradaException
+from src.modules.account.exceptions import ContaNaoEncontradaException
+from src.modules.pix.exceptions import SaldoInsuficienteException
 
 
 @pytest.fixture

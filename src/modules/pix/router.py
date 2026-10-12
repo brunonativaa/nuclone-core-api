@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database import get_db
-from src.modules.pix.service import (
-    PixService,
+from src.modules.limits.exceptions import ExceededLimitException
+
+from src.modules.pix.service import PixService
+from src.modules.pix.exceptions import (
     SaldoInsuficienteException,
     ContaNaoEncontradaException,
     ChavePixDuplicadaException,
@@ -42,6 +44,15 @@ async def transfer_pix(payload: PixTransferInput, db: AsyncSession = Depends(get
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+
+    except ExceededLimitException as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "code": "LIMIT_EXCEEDED",
+                "message": str(e)
+            }
         )
 
 

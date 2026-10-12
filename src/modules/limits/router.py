@@ -7,9 +7,11 @@ from src.core.database import get_db
 from src.core.security import get_current_customer
 
 from src.modules.customer.model import ClienteModel
+from src.modules.account.model import ContaModel
 from src.modules.customer.repository import ClienteRepository
 from src.modules.account.repository import ContaRepository
 from src.modules.ledger.repository import LedgerRepository
+from src.modules.ledger.exceptions import TransacaoNaoEncontradaException
 from src.modules.ledger.schema import ExtratoItemSchema, ResumoContaSchema, ExtratoCompletoSchema
 from src.modules.limits.schema import  LimitesResponseSchema, UpdateLimiteSchema
 from src.modules.limits.repository import LimitesRepository
@@ -47,3 +49,28 @@ async def alterar_limites_pix(
 
     service = LimitesService(LimitesRepository(db), LedgerRepository(db))
     return await service.atualizar_limites(conta.id_conta, payload)
+
+@router.get("/transacoes/{id_transacao}", response_model=ExtratoItemSchema)
+async def get_transacao_por_id(
+    id_transacao: int,
+    conta: ContaModel = Depends(get_current_customer),
+    db: AsyncSession = Depends(get_db)
+):
+    service = LedgerService(LedgerRepository(db))
+    try:
+        transacao = await service.get_by_id(id_transacao)
+        
+        # Blindagem de IDOR: garante que a transação pertence à conta autenticada
+        if transacao.id_conta_origem != conta.id_conta and transacao.id_conta_destino != conta.id_conta:
+            raise TransacaoNaoEncontradaException(id_transacao)
+            
+        return transacao
+        
+    except TransacaoNaoEncontradaException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "TRANSACTION_NOT_FOUND",
+                "message": str(e)
+            }
+        )

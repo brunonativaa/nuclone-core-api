@@ -1,5 +1,6 @@
 import os
 import uuid
+from decimal import Decimal
 from datetime import date, datetime, timezone
 import pytest
 import pytest_asyncio
@@ -12,7 +13,8 @@ os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 
 from src.main import app
 from src.core.database import get_db, Base
-from src.modules.account.model import ContaModel, SaldoContaModel
+from src.modules.account.model import ContaModel, SaldoContaModel, TipoContaEnum
+from src.modules.limits.model import LimiteContaModel
 from src.modules.customer.model import ClienteModel
 from src.modules.pix.model import ChavePixModel
 
@@ -73,9 +75,61 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
         
     app.dependency_overrides.clear()
 
+@pytest.fixture
+async def account_with_config_limits(db_session: AsyncSession):
+    """
+    Fixture que garante a criação atómica de uma conta bancária 
+    juntamente com os seus perfis de limites diários e noturnos.
+    """
+    # 1. Criação da Conta Base
+    cliente = ClienteModel(
+        nome="Cliente de Teste",
+        cpf="12551256587",
+        email="teste.automacao@fintech.com",
+        senha_hash="fake_hash_para_teste",
+        pin_transacao_hash="152585", 
+        sexo="M",
+        data_nascimento = date(1997, 8, 15)
+    )
+    db_session.add(cliente)
+    await db_session.commit()
+    await db_session.refresh(cliente)
+
+    conta = ContaModel(
+        id_cliente=cliente.id_cliente,
+        num_conta="12345678-9",  # Garanta uma num_conta única se exigido pelo modelo
+        tipo_conta=TipoContaEnum.PF,
+        agencia="0001",
+    )
+    db_session.add(conta)
+    await db_session.commit()
+    await db_session.refresh(conta)
+
+    saldo_inicial = SaldoContaModel(
+        id_conta=conta.id_conta,
+        saldo_disponivel=Decimal("1500.00"),
+        saldo_bloqueado=Decimal("0.00")
+    )
+    db_session.add(saldo_inicial)
+
+    # 2. Provisionamento Obrigatório dos Limites de Transação
+    limite = LimiteContaModel(
+        id_conta=conta.id_conta,
+        limite_diario=Decimal("10000.00"),
+        limite_noturno=Decimal("600.00")
+    )
+    db_session.add(limite)
+
+    await db_session.commit()
+    await db_session.refresh(conta)
+
+    return conta
+
+
 # -----------------------------------------------------------------------------
 # Fixtures de Massa de Dados (Assíncronas e Sem Duplicidade)
 # -----------------------------------------------------------------------------
+
 
 @pytest.fixture
 def valid_customer_data():
@@ -106,6 +160,14 @@ async def id_conta_origem(db_session: AsyncSession, valid_customer_data):
     )
     db_session.add(conta)
     await db_session.flush()
+
+    limite = LimiteContaModel(
+        id_conta=conta.id_conta,
+        limite_diario=Decimal("10000.00"),
+        limite_noturno=Decimal("600.00")
+    )
+    db_session.add(limite)
+    await db_session.commit()
 
     saldo = SaldoContaModel(
         id_conta=conta.id_conta,
@@ -144,6 +206,14 @@ async def id_conta_destino(db_session: AsyncSession):
     db_session.add(conta)
     await db_session.flush()
 
+    limite = LimiteContaModel(
+        id_conta=conta.id_conta,
+        limite_diario=Decimal("10000.00"),
+        limite_noturno=Decimal("600.00")
+    )
+    
+    db_session.add(limite)
+    await db_session.commit()
     saldo = SaldoContaModel(
         id_conta=conta.id_conta,
         saldo_disponivel=0.00,

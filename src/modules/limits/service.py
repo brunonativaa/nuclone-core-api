@@ -45,8 +45,8 @@ class LimitesService:
         if (gasto_atual + valor) > limite_maximo:
             periodo = "noturno" if is_noturno else "diario"
             raise ExceededLimitException(
-                message=f"Transação excede o limite {periodo} disponível. Disponível: R$ {disponivel:.2f}",
-                disponivel=disponivel   
+                message=f"Transação excede o limite diário disponível. Disponível: R$ {limite_maximo - gasto_atual:.2f}",
+                disponivel=disponivel  
             )
 
         return True
