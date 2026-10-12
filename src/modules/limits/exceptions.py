@@ -10,7 +10,8 @@ class LimitNotFoundException(LimitException):
         super().__init__(self.message)
 
 class ExceededLimitException(LimitException):
-    def __init__(self, message: str = "Transação excede o limite disponível.", disponivel: Decimal):
+    def __init__(self, message: str = "Transação excede o limite disponível.", disponivel: Decimal = Decimal("0.00")
+):
         self.message = message
         self.disponivel = disponivel
         super().__init__(self.message)    
