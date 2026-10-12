@@ -10,7 +10,7 @@ from src.core.security import  hash_password
 
 
 
-async def test_login_credenciais_invalidas(client: AssyncClient):
+async def test_login_credenciais_invalidas(client: AsyncClient):
     # Envia credenciais erradas para disparar a HTTPException das linhas 23-28
     response = await client.post(
         "/api/v1/auth/login",
