@@ -6,6 +6,7 @@ from src.core.database import get_db
 from src.core.security import get_current_customer
 from src.modules.ledger.schema import ExtratoItemSchema
 from src.modules.ledger.repository import LedgerRepository
+from src.modules.ledger.service import LedgerService
 from src.modules.customer.model import ClienteModel
 from src.modules.account.model import ContaModel
 
