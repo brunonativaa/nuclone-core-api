@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from src.core.schema import BaseDTO
 from decimal import Decimal
+from datetime import datetime
 from typing import Literal, Optional
 
 
@@ -72,3 +73,15 @@ class PixTransferOutput(BaseDTO):
         ..., description="Identificador único do comprovante"
     )
     valor: Decimal = Field(..., description="Valor transferido")
+
+
+
+# Schema do Evento Rabbit
+class PixSolicitadoEvent(BaseDTO):
+    event_id: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    id_transacao: int
+    id_conta_origem: int
+    chave_destino: str
+    valor: Decimal
+    status: str = "PROCESSANDO"
