@@ -14,7 +14,7 @@ class RabbitMQBroker:
 
     async def publish_event(self, exchange_name: str, routing_key: str, payload: Dict[str, Any]):
         await self.connect()
-        async with self.connection.channel() as channel:
+        async with self._connection.channel() as channel:
             exchange = await channel.declare_exchange(
                 exchange_name,
                 aio_pika.ExchangeType.TOPIC,    
@@ -27,6 +27,6 @@ class RabbitMQBroker:
                 content_type="application/json"
             )
 
-            await exchage.publish(message, routing_key=routing_key)
+            await exchange.publish(message, routing_key=routing_key)
 
 broker = RabbitMQBroker()
