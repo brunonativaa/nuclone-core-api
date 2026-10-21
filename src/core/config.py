@@ -15,10 +15,10 @@ class Settings:
     )
 
 
-    RABBITMQ_USER: str = os.getenv("RABBITMQ_USER",")
-    RABBITMQ_PASSWORD: str = os.getenv("RABBITMQ_PASSWORD",)
-    RABBITMQ_HOST: str = os.getenv("RABBITMQ_HOST", )
-    RABBITMQ_PORT: str = os.getenv("RABBITMQ_PORT,)
+    RABBITMQ_USER: str = os.getenv("RABBITMQ_USER", "admin")
+    RABBITMQ_PASSWORD: str = os.getenv("RABBITMQ_PASSWORD", "admin123")
+    RABBITMQ_HOST: str = os.getenv("RABBITMQ_HOST", "localhost")
+    RABBITMQ_PORT: str = os.getenv("RABBITMQ_PORT", "5672")
     
     # Monta a URL que o broker.py está tentando acessar
     RABBITMQ_URL: str = (
