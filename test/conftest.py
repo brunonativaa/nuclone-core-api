@@ -2,6 +2,7 @@ import os
 import uuid
 from decimal import Decimal
 from datetime import date, datetime, timezone
+from unittest.mock import AsyncMock, patch
 import pytest
 import pytest_asyncio
 from typing import AsyncGenerator
@@ -9,6 +10,11 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.pool import StaticPool
 
+os.environ["RABBITMQ_USER"] = "admin"
+os.environ["RABBITMQ_PASSWORD"] = "admin123"
+os.environ["RABBITMQ_HOST"] = "localhost"
+
+os.environ["SECRET_KEY"] = os.getenv("SECRET_KEY", "chave_secreta_padrao_para_testes_unitarios_123")
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 
 from src.main import app
@@ -124,6 +130,12 @@ async def account_with_config_limits(db_session: AsyncSession):
     await db_session.refresh(conta)
 
     return conta
+
+
+@pytest.fixture(autouse=True)
+def mock_rabbitmq_broker():
+    with patch("src.core.broker.RabbitMQBroker.publish_event", new_callable=AsyncMock) as mock_publish:
+        yield mock_publish
 
 
 # -----------------------------------------------------------------------------
