@@ -18,11 +18,13 @@ async def get_current_account(
     current_user: ClienteModel = Depends(get_current_customer),
     db: AsyncSession = Depends(get_db)
 ) -> ContaModel:
+  
    
     query = select(ContaModel).where(
         ContaModel.id_cliente == current_user.id_cliente)
     result = await db.execute(query)
     conta = result.scalar_one_or_none()
+ 
 
     if not conta:
         raise HTTPException(

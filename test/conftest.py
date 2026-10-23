@@ -2,15 +2,16 @@ import os
 import uuid
 from decimal import Decimal
 from datetime import date, datetime, timezone
+from unittest.mock import AsyncMock, patch
+from typing import AsyncGenerator
+
 import pytest
 import pytest_asyncio
-from typing import AsyncGenerator
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.pool import StaticPool
 
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
-
+from src.core.security import create_access_token
 from src.main import app
 from src.core.database import get_db, Base
 from src.modules.account.model import ContaModel, SaldoContaModel, TipoContaEnum
@@ -18,13 +19,20 @@ from src.modules.limits.model import LimiteContaModel
 from src.modules.customer.model import ClienteModel
 from src.modules.pix.model import ChavePixModel
 
-
 # -----------------------------------------------------------------------------
-# Configuração Assíncrona do Banco em Memória
+# Configuração Global de Ambiente para Testes
 # -----------------------------------------------------------------------------
+os.environ["RABBITMQ_USER"] = "admin"
+os.environ["RABBITMQ_PASSWORD"] = "admin123"
+os.environ["RABBITMQ_HOST"] = "localhost"
+os.environ["SECRET_KEY"] = os.getenv("SECRET_KEY", "chave_secreta_padrao_para_testes_unitarios_123")
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
+# -----------------------------------------------------------------------------
+# Configuração Assíncrona do Banco em Memória (Engine & Session Factory)
+# -----------------------------------------------------------------------------
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
@@ -38,8 +46,9 @@ TestingSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
-
-# 1. Use explicitamente pytest_asyncio.fixture e garanta escopo de função
+# -----------------------------------------------------------------------------
+# Infraestrutura de Teste (DB, Client e Mocks Globais)
+# -----------------------------------------------------------------------------
 @pytest_asyncio.fixture(scope="function")
 async def init_db():
     """Cria e destrói as tabelas a cada função de teste para garantir isolamento puro."""
@@ -48,9 +57,9 @@ async def init_db():
     yield
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+    
 
 
-# 2. Defina o decorator correto do plugin assíncrono
 @pytest_asyncio.fixture(scope="function")
 async def db_session(init_db) -> AsyncGenerator[AsyncSession, None]:
     """Sessão assíncrona isolada para cada teste."""
@@ -58,7 +67,6 @@ async def db_session(init_db) -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-# 3. Garanta que o override da dependência repasse a sessão corrente
 @pytest_asyncio.fixture(scope="function")
 async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Cliente HTTP assíncrono conectado com override da sessão de BD de teste."""
@@ -75,62 +83,47 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
         
     app.dependency_overrides.clear()
 
+
 @pytest.fixture
-async def account_with_config_limits(db_session: AsyncSession):
-    """
-    Fixture que garante a criação atómica de uma conta bancária 
-    juntamente com os seus perfis de limites diários e noturnos.
-    """
-    # 1. Criação da Conta Base
-    cliente = ClienteModel(
-        nome="Cliente de Teste",
-        cpf="12551256587",
-        email="teste.automacao@fintech.com",
-        senha_hash="fake_hash_para_teste",
-        pin_transacao_hash="152585", 
-        sexo="M",
-        data_nascimento = date(1997, 8, 15)
-    )
-    db_session.add(cliente)
-    await db_session.commit()
-    await db_session.refresh(cliente)
+def mock_rabbitmq_broker():
+    """Mock preventivo para evitar conexões reais ao broker durante testes de integração/E2E."""
+    with patch("src.core.broker.RabbitMQBroker.publish_event", new_callable=AsyncMock) as mock_publish:
+        yield mock_publish
 
-    conta = ContaModel(
-        id_cliente=cliente.id_cliente,
-        num_conta="12345678-9",  # Garanta uma num_conta única se exigido pelo modelo
-        tipo_conta=TipoContaEnum.PF,
-        agencia="0001",
-    )
-    db_session.add(conta)
-    await db_session.commit()
-    await db_session.refresh(conta)
+@pytest.fixture(autouse=True)
+def mock_rabbitmq_broker_globally(request):
 
-    saldo_inicial = SaldoContaModel(
-        id_conta=conta.id_conta,
-        saldo_disponivel=Decimal("1500.00"),
-        saldo_bloqueado=Decimal("0.00")
-    )
-    db_session.add(saldo_inicial)
+    if "test_broker" in request.node.fspath.strpath:
+        yield
+        return
 
-    # 2. Provisionamento Obrigatório dos Limites de Transação
-    limite = LimiteContaModel(
-        id_conta=conta.id_conta,
-        limite_diario=Decimal("10000.00"),
-        limite_noturno=Decimal("600.00")
-    )
-    db_session.add(limite)
+    with patch("src.core.broker.RabbitMQBroker.publish_event", new_callable=AsyncMock) as mock_publish:
+        yield mock_publish
 
-    await db_session.commit()
-    await db_session.refresh(conta)
+# -----------------------------------------------------------------------------
+# Fixtures de Segurança e Autenticação (Tokens JWT)
+# -----------------------------------------------------------------------------
+@pytest.fixture
+def token_autenticacao_valido() -> str:
+    """Gera um token JWT válido para testes gerais do ledger."""
+    return create_access_token(data={"sub": "1"})
 
-    return conta
+
+@pytest.fixture
+def token_usuario_a() -> str:
+    """Gera um token JWT simulando o Usuário A para validação de IDOR."""
+    return create_access_token(data={"sub": "1"})
+
+
+@pytest.fixture
+def token_usuario_b() -> str:
+    """Gera um token JWT simulando o Usuário B para validação de IDOR."""
+    return create_access_token(data={"sub": "20"})
 
 
 # -----------------------------------------------------------------------------
-# Fixtures de Massa de Dados (Assíncronas e Sem Duplicidade)
+# Fixtures de Massa de Dados (Factories Assíncronas)
 # -----------------------------------------------------------------------------
-
-
 @pytest.fixture
 def valid_customer_data():
     uid = str(uuid.uuid4())[:8]
@@ -145,7 +138,52 @@ def valid_customer_data():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
+async def account_with_config_limits(db_session: AsyncSession):
+    """Fixture que garante a criação atómica de uma conta com limites e saldos."""
+    cliente = ClienteModel(
+        nome="Cliente de Teste",
+        cpf="12551256587",
+        email="teste.automacao@fintech.com",
+        senha_hash="fake_hash_para_teste",
+        pin_transacao_hash="152585", 
+        sexo="M",
+        data_nascimento=date(1997, 8, 15)
+    )
+    db_session.add(cliente)
+    await db_session.commit()
+    await db_session.refresh(cliente)
+
+    conta = ContaModel(
+        id_cliente=cliente.id_cliente,
+        num_conta="12345678-9",
+        tipo_conta=TipoContaEnum.PF,
+        agencia="0001",
+    )
+    db_session.add(conta)
+    await db_session.commit()
+    await db_session.refresh(conta)
+
+    saldo_inicial = SaldoContaModel(
+        id_conta=conta.id_conta,
+        saldo_disponivel=Decimal("1500.00"),
+        saldo_bloqueado=Decimal("0.00")
+    )
+    db_session.add(saldo_inicial)
+
+    limite = LimiteContaModel(
+        id_conta=conta.id_conta,
+        limite_diario=Decimal("10000.00"),
+        limite_noturno=Decimal("600.00")
+    )
+    db_session.add(limite)
+
+    await db_session.commit()
+    await db_session.refresh(conta)
+    return conta
+
+
+@pytest_asyncio.fixture
 async def id_conta_origem(db_session: AsyncSession, valid_customer_data):
     cliente = ClienteModel(**valid_customer_data)
     db_session.add(cliente)
@@ -167,21 +205,20 @@ async def id_conta_origem(db_session: AsyncSession, valid_customer_data):
         limite_noturno=Decimal("600.00")
     )
     db_session.add(limite)
-    await db_session.commit()
-
+    
     saldo = SaldoContaModel(
         id_conta=conta.id_conta,
-        saldo_disponivel=100.00,
-        saldo_bloqueado=0.00,
+        saldo_disponivel=Decimal("100.00"),
+        saldo_bloqueado=Decimal("0.00"),
         ultima_atualizacao=datetime.now(timezone.utc)
     )
     db_session.add(saldo)
-    await db_session.flush()
+    await db_session.commit()
 
     return conta.id_conta
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def id_conta_destino(db_session: AsyncSession):
     uid = str(uuid.uuid4())[:8]
     dados_destino = {
@@ -211,22 +248,21 @@ async def id_conta_destino(db_session: AsyncSession):
         limite_diario=Decimal("10000.00"),
         limite_noturno=Decimal("600.00")
     )
-    
     db_session.add(limite)
-    await db_session.commit()
+    
     saldo = SaldoContaModel(
         id_conta=conta.id_conta,
-        saldo_disponivel=0.00,
-        saldo_bloqueado=0.00,
+        saldo_disponivel=Decimal("0.00"),
+        saldo_bloqueado=Decimal("0.00"),
         ultima_atualizacao=datetime.now(timezone.utc)
     )
     db_session.add(saldo)
-    await db_session.flush()
+    await db_session.commit()
 
     return conta.id_conta
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def chave_pix_origem(db_session: AsyncSession, id_conta_origem):
     chave = ChavePixModel(
         id_conta=id_conta_origem,
@@ -238,7 +274,7 @@ async def chave_pix_origem(db_session: AsyncSession, id_conta_origem):
     return chave.valor_chave
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def chave_pix_destino(db_session: AsyncSession, id_conta_destino):
     chave = ChavePixModel(
         id_conta=id_conta_destino,

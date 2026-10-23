@@ -8,13 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import or_
 
-from src.core.config import settings
+from src.core.config import get_settings
 from src.core.database import get_db
 from src.modules.customer.model import ClienteModel
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
-SECRET_KEY = settings.SECRET_KEY
+SECRET_KEY = get_settings().SECRET_KEY
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -64,15 +64,17 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 async def get_current_customer(
     token: str = Depends(oauth2_scheme),
-    db: Optional[AsyncSession] = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ) -> ClienteModel:
-    """Valida o token JWT e retorna o cliente autenticado."""
+    
+    #Valida o token JWT e retorna o cliente autenticado de forma segura."""
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Não foi possível validar as credenciais",
         headers={"WWW-Authenticate": "Bearer"},
     )
-
+    
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         sub: str = payload.get("sub")
@@ -81,21 +83,15 @@ async def get_current_customer(
     except JWTError:
         raise credentials_exception
 
-    if not isinstance(db, AsyncSession):
-        if str(sub).isdigit():
-            return int(sub)
-        raise credentials_exception
-
-    # Higieniza o valor de sub para busca numérica ou string limpa
+    # Higienização e normalização do sub
     sub_str = str(sub).strip()
-    sub_limpo = "".join(filter(str.isdigit, sub_str))
-
-    # Busca resiliente: tenta encontrar tanto por ID (se for numérico) quanto por CPF
-    if sub_limpo.isdigit() and len(sub_limpo) <= 5:
-        # Se for um número curto, tratamos como ID do cliente
-        query = select(ClienteModel).where(ClienteModel.id_cliente == int(sub_limpo))
+    
+    # Construção da query de forma limpa
+    # Dica de ouro: Se o seu token usa primariamente o ID no 'sub', evite misturar CPF 
+    # a menos que seja estritamente necessário. Se for ID, converta para int de forma segura:
+    if sub_str.isdigit():
+        query = select(ClienteModel).where(ClienteModel.id_cliente == int(sub_str))
     else:
-        # Caso contrário (como o CPF de 11 dígitos), consultamos estritamente pela coluna CPF
         query = select(ClienteModel).where(ClienteModel.cpf == sub_str)
 
     result = await db.execute(query)
