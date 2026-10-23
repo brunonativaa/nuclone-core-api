@@ -8,10 +8,10 @@ from src.modules.customer.service import (
 
 from src.modules.customer.schema import ClienteCreateInput, ClienteResponse
 
-router = APIRouter(tags=["Clientes"])
+router = APIRouter(prefix="/clientes", tags=["Clientes"])
 
 
-@router.post("",response_model=ClienteResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/criar",response_model=ClienteResponse, status_code=status.HTTP_201_CREATED)
 async def create_customer(cliente: ClienteCreateInput, db: AsyncSession = Depends(get_db)):
     service = ClienteService(db)
 

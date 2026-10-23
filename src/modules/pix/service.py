@@ -12,7 +12,7 @@ from src.modules.account.repository import ContaRepository
 from src.modules.account.service import ContaService
 from src.modules.pix.repository import PixRepository
 from src.modules.pix.model import ChavePixModel
-from src.modules.pix.events import pix_events
+from src.modules.pix.events import PixEventOperations
 from src.modules.pix.exceptions import (
     SaldoInsuficienteException,
     ContaNaoEncontradaException,
@@ -32,7 +32,7 @@ class PixService:
         self.limits_repo = LimitesRepository(db)
         self.ledger_repo = LedgerRepository(db)
         self.limits_servi = LimitesService(self.limits_repo, self.ledger_repo)
-        self.pix_events =  pix_events
+        self.pix_events =  PixEventOperations()
 
     async def register_pix_key(self, id_conta: int, key_type: str, valor_chave: Optional[str] = None) -> ChavePixModel:
         # 1. Cadastra a chave PIX para a conta especificada
@@ -131,7 +131,7 @@ class PixService:
             })
 
             await self.db.commit()
-            await pix_events.disparar_pix_solicitado(
+            await self.pix_events.disparar_pix_solicitado(
                 id_transacao=dados_transacao.id_transacao,
                 id_conta_origem=id_conta_origem,
                 id_conta_destino=id_conta_destino,

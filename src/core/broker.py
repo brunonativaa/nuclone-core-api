@@ -1,11 +1,11 @@
 import json
 import aio_pika
 from typing import Any, Dict
-from src.core.config import settings
+from src.core.config import get_settings
 
 class RabbitMQBroker:
     def __init__(self):
-        self.url = settings.RABBITMQ_URL
+        self.url = get_settings().RABBITMQ_URL
         self._connection = None
 
     async def connect(self):
@@ -29,4 +29,4 @@ class RabbitMQBroker:
 
             await exchange.publish(message, routing_key=routing_key)
 
-broker = RabbitMQBroker()
+

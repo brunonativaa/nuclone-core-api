@@ -16,11 +16,11 @@ async def test_create_customer_success(client):
         "data_nascimento": "2002-04-07"
     }
 
-    response = await client.post("/api/v1/customers", json=payload)
+    response = await client.post("/api/v1/clientes/criar", json=payload)
     print(response.json())
     assert response.status_code in [200, 201]
 
 
 async def test_searching_nonexistent_customer_account_return_404(client):
-    response = await client.get("/api/v1/customers/999999")
+    response = await client.get("/api/v1/clientes/999999")
     assert response.status_code == 404

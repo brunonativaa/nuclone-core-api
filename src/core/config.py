@@ -1,4 +1,5 @@
 import os
+from functools import lru_cache
 
 class Settings:
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
@@ -25,5 +26,8 @@ class Settings:
         f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@"
         f"{RABBITMQ_HOST}:{RABBITMQ_PORT}/"
     )
-# Instância exportada para ser importada no security.py e database.py
-settings = Settings()
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
