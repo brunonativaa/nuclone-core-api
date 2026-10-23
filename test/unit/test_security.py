@@ -2,6 +2,7 @@ import pytest
 from datetime import timedelta, date
 from fastapi import HTTPException
 from jose import jwt 
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.security import (
     hash_password,
     verify_password,
