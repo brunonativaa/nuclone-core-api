@@ -90,6 +90,15 @@ def mock_rabbitmq_broker():
     with patch("src.core.broker.RabbitMQBroker.publish_event", new_callable=AsyncMock) as mock_publish:
         yield mock_publish
 
+@pytest.fixture(autouse=True)
+def mock_rabbitmq_broker_globally(request):
+
+    if "test_broker" in request.node.fspath.strpath:
+        yield
+        return
+
+    with patch("src.core.broker.RabbitMQBroker.publish_event", new_callable=AsyncMock) as mock_publish:
+        yield mock_publish
 
 # -----------------------------------------------------------------------------
 # Fixtures de Segurança e Autenticação (Tokens JWT)
