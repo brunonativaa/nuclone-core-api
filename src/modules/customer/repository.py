@@ -1,3 +1,4 @@
+import random
 from typing import Sequence, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +12,10 @@ class ClienteRepository:
         self.db = db_session
 
     async def create(self, data: dict) -> ClienteModel:
+        
+        if "id_cliente" not in data or not data["id_cliente"]:
+             data["id_cliente"] = random.randint(10000, 999999)
+
         cliente = ClienteModel(**data)
         self.db.add(cliente)
         await self.db.flush()  # Envia os comandos SQL para a transação atual para gerar o ID

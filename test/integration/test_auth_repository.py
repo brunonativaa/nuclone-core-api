@@ -1,4 +1,5 @@
 import pytest
+import random
 import uuid
 from httpx import AsyncClient
 from datetime import date
@@ -24,6 +25,7 @@ async def test_login_credenciais_invalidas(client: AsyncClient):
 async def test_auth_repository_get_cliente_by_cpf(db_session):
     repo = AuthRepository(db_session)
     cliente = ClienteModel(
+        id_cliente=random.randint(10000, 999999),
         nome="Teste Auth",
         cpf="12345678900",
         sexo="F",
@@ -45,6 +47,7 @@ async def test_auth_repository_get_cliente_by_cpf(db_session):
 async def test_auth_repository_get_account_by_cliente_id(db_session):
     repo = AuthRepository(db_session)
     cliente = ClienteModel( 
+        id_cliente=random.randint(10000, 999999),
         nome="Teste Conta", 
             cpf="10987654321",
             sexo="M",

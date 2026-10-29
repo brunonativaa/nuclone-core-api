@@ -33,7 +33,9 @@ async def setup_two_accounts_with_balance(db_session, valid_customer_data):
     random_id = random.randint(1000, 9999)
     random_cpf = f"{random.randint(100, 999)}.{random.randint(100, 999)}.{random.randint(100, 999)}-00"
 
+
     customer2_data = {
+        "id_cliente": random.randint(10000, 999999),
         "nome": "Bruno Receiver Teste",
         "cpf": random_cpf,
         "sexo": "M",

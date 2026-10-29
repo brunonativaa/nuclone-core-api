@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Integer, String, Date, CHAR, ForeignKey, Enum as SQLEnum
+from sqlalchemy import BigInteger, String, Date, CHAR, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 from src.modules.account.model import ContaModel
@@ -9,7 +9,7 @@ class ClienteModel(Base):
     __tablename__ = 'clientes'
 
     id_cliente: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True)
+        BigInteger, primary_key=True, index=True, autoincrement=True)
     nome: Mapped[str] = mapped_column(String(100), nullable=False)
     cpf: Mapped[str] = mapped_column(String(11), unique=True, nullable=False)
     sexo: Mapped[str] = mapped_column(CHAR(1))
@@ -45,8 +45,8 @@ class EnderecoModel(Base):
     __tablename__ = 'enderecos'
 
     id_endereco: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True)
-    id_cliente: Mapped[int] = mapped_column(Integer, ForeignKey(
+        BigInteger, primary_key=True, index=True)
+    id_cliente: Mapped[int] = mapped_column(BigInteger, ForeignKey(
         "clientes.id_cliente"), nullable=False)
     estado: Mapped[str] = mapped_column(String(2), nullable=False)
     cidade: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -61,8 +61,8 @@ class EnderecoModel(Base):
 class TelefoneModel(Base):
     __tablename__ = "telefones"
 
-    id_telefone: Mapped[int] = mapped_column(Integer, primary_key=True)
-    id_cliente: Mapped[int] = mapped_column(Integer, ForeignKey(
+    id_telefone: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id_cliente: Mapped[int] = mapped_column(BigInteger, ForeignKey(
         "clientes.id_cliente"), nullable=False)
     numero: Mapped[str] = mapped_column(String(15), nullable=False)
     tipo: Mapped[TipoNumeroEnum] = mapped_column(

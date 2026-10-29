@@ -1,5 +1,6 @@
 import os
 import uuid
+import random
 from decimal import Decimal
 from datetime import date, datetime, timezone
 from unittest.mock import AsyncMock, patch
@@ -92,7 +93,6 @@ def mock_rabbitmq_broker():
 
 @pytest.fixture(autouse=True)
 def mock_rabbitmq_broker_globally(request):
-
     if "test_broker" in request.node.fspath.strpath:
         yield
         return
@@ -128,6 +128,7 @@ def token_usuario_b() -> str:
 def valid_customer_data():
     uid = str(uuid.uuid4())[:8]
     return {
+        "id_cliente": random.randint(10000, 999999), # ID explícito para compatibilidade com SQLite BigInteger
         "nome": f"Bruno Teste {uid}",
         "cpf": str(uuid.uuid4().int)[:11].zfill(11),
         "email": f"pytest_{uid}@email.com",
@@ -142,6 +143,7 @@ def valid_customer_data():
 async def account_with_config_limits(db_session: AsyncSession):
     """Fixture que garante a criação atómica de uma conta com limites e saldos."""
     cliente = ClienteModel(
+        id_cliente=random.randint(10000, 999999),
         nome="Cliente de Teste",
         cpf="12551256587",
         email="teste.automacao@fintech.com",
@@ -222,6 +224,7 @@ async def id_conta_origem(db_session: AsyncSession, valid_customer_data):
 async def id_conta_destino(db_session: AsyncSession):
     uid = str(uuid.uuid4())[:8]
     dados_destino = {
+        "id_cliente": random.randint(10000, 999999),
         "nome": "Cliente Destino Teste",
         "cpf": str(uuid.uuid4().int)[:11].zfill(11),
         "email": f"destino_{uid}@email.com",
