@@ -16,7 +16,7 @@ from src.modules.pix.schema import (
     PixKeyCreateInput,
 )
 
-router = APIRouter(tags=["Pix Transactions"])
+router = APIRouter(prefix="/pix", tags=["Pix Transactions"])
 
 
 @router.post("/transfer", status_code=status.HTTP_200_OK, response_model=PixTransferOutput)
