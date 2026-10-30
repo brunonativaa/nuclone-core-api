@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
-from sqlalchemy import Numeric, DateTime, ForeignKey
+from sqlalchemy import Numeric, BigInteger, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 
@@ -8,9 +8,9 @@ from src.core.database import Base
 class LimiteContaModel(Base):
     __tablename__ = "limites_contas"
 
-    id_limite: Mapped[int] = mapped_column(
+    id_limite: Mapped[int] = mapped_column(BigInteger,
         primary_key=True, autoincrement=True)
-    id_conta: Mapped[int] = mapped_column(ForeignKey(
+    id_conta: Mapped[int] = mapped_column(BigInteger, ForeignKey(
         "contas.id_conta", ondelete="CASCADE"), unique=True, nullable=False)
     limite_diario: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), default=Decimal("1000.00"))

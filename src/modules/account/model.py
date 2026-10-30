@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy import DateTime, TIMESTAMP
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional, List
-from sqlalchemy import String, ForeignKey, Numeric, DateTime, Enum as SQLEnum
+from sqlalchemy import String, BigInteger, ForeignKey, Numeric, DateTime, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 from src.modules.limits.model import LimiteContaModel
@@ -12,6 +12,7 @@ from src.modules.pix.model import ChavePixModel
 
 if TYPE_CHECKING:
     from src.modules.limits.model import LimiteContaModel
+    from src.modules.pix.model import ChavePixModel
     from src.modules.customer.model import ClienteModel
 
 
@@ -24,8 +25,8 @@ class ContaModel(Base):
 
     __tablename__ = "contas"
 
-    id_conta: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    id_cliente: Mapped[int] = mapped_column(ForeignKey(
+    id_conta: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id_cliente: Mapped[int] = mapped_column(BigInteger, ForeignKey(
         "clientes.id_cliente"), nullable=False)
     num_conta: Mapped[str] = mapped_column(
         String(20), nullable=False, unique=True)
@@ -38,6 +39,8 @@ class ContaModel(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False
     )
+
+    # Relacionamentos
     cliente: Mapped["ClienteModel"] = relationship(
         "ClienteModel", back_populates="contas")
     saldo: Mapped["SaldoContaModel"] = relationship("SaldoContaModel", back_populates="conta",
@@ -51,9 +54,9 @@ class ContaModel(Base):
 class SaldoContaModel(Base):
     __tablename__ = "saldo_contas"
 
-    id_saldo_conta: Mapped[int] = mapped_column(
+    id_saldo_conta: Mapped[int] = mapped_column(BigInteger,
         primary_key=True, autoincrement=True)
-    id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"),
+    id_conta: Mapped[int] = mapped_column(BigInteger, ForeignKey("contas.id_conta"),
                                           unique=True, nullable=False)
     saldo_disponivel: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), nullable=False, default=Decimal('0.00'))

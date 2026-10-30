@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 import enum
-from sqlalchemy import Integer, Numeric, DateTime, TIMESTAMP, Boolean, ForeignKey, Enum as SQLEnum
+from sqlalchemy import BigInteger, Numeric, DateTime, TIMESTAMP, Boolean, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column
 from src.core.database import Base
 
@@ -25,10 +25,10 @@ class TransacaoModel(Base):
     __tablename__ = "transacao"
 
     id_transacao: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True)
-    id_conta_origem: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True)
+    id_conta_origem: Mapped[int] = mapped_column(BigInteger,
         ForeignKey("contas.id_conta"), nullable=False, index=True)
-    id_conta_destino: Mapped[int] = mapped_column(
+    id_conta_destino: Mapped[int] = mapped_column(BigInteger,
         ForeignKey("contas.id_conta"), nullable=False, index=True)
     tipo_transacao: Mapped[TipoTransacaoEnum] = mapped_column(
         SQLEnum(TipoTransacaoEnum,name="tipo_de_transacao"), default=TipoTransacaoEnum.PIX, server_default=TipoTransacaoEnum.PIX, nullable=False)

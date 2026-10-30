@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime, timezone
 from sqlalchemy import DateTime, TIMESTAMP
-from sqlalchemy import Integer, String, Enum as SQLEnum, ForeignKey, DateTime
+from sqlalchemy import BigInteger, String, Enum as SQLEnum, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 
@@ -18,8 +18,8 @@ class ChavePixModel(Base):
     __tablename__ = "chaves_pix"
 
     id_chave: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True)
-    id_conta: Mapped[int] = mapped_column(Integer, ForeignKey(
+        BigInteger, primary_key=True, autoincrement=True)
+    id_conta: Mapped[int] = mapped_column(BigInteger, ForeignKey(
         "contas.id_conta", ondelete="CASCADE"), nullable=False)
     tipo_chave: Mapped[TipoChavePixEnum] = mapped_column(
         SQLEnum(TipoChavePixEnum, name="tipo_chave_pix"), nullable=False, default=TipoChavePixEnum.CPF)
