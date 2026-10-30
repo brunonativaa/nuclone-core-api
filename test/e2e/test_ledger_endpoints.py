@@ -1,6 +1,7 @@
 from datetime import date
 from decimal import Decimal
 import pytest
+import random
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,10 +29,17 @@ async def test_get_bank_extract_success(client: AsyncClient, db_session: AsyncSe
         )
         
         conta = ContaModel(
-            id_conta=100, 
+            id_conta=1,
             id_cliente=1, 
             num_conta="12345-6",
-            saldo=SaldoContaModel(saldo_disponivel=Decimal("1000.0"))
+            agencia="0001"
+        )
+
+        saldo = SaldoContaModel(
+            id_saldo_conta=1,  # <--- ID explícito para o saldo
+            id_conta=1,
+            saldo_disponivel=Decimal("1000.00"),
+            saldo_bloqueado=Decimal("0.00")
         )
         
         db_session.add(cliente)

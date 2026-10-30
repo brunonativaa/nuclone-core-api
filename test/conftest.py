@@ -11,6 +11,8 @@ import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.pool import StaticPool
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 
 from src.core.security import create_access_token
 from src.main import app
@@ -46,6 +48,12 @@ TestingSessionLocal = async_sessionmaker(
     expire_on_commit=False,
     autoflush=False,
 )
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 # -----------------------------------------------------------------------------
 # Infraestrutura de Teste (DB, Client e Mocks Globais)
@@ -157,6 +165,7 @@ async def account_with_config_limits(db_session: AsyncSession):
     await db_session.refresh(cliente)
 
     conta = ContaModel(
+        id_conta=random.randint(10000, 999999),
         id_cliente=cliente.id_cliente,
         num_conta="12345678-9",
         tipo_conta=TipoContaEnum.PF,
@@ -167,6 +176,7 @@ async def account_with_config_limits(db_session: AsyncSession):
     await db_session.refresh(conta)
 
     saldo_inicial = SaldoContaModel(
+        id_saldo_conta=random.randint(10000, 999999),
         id_conta=conta.id_conta,
         saldo_disponivel=Decimal("1500.00"),
         saldo_bloqueado=Decimal("0.00")
@@ -174,6 +184,7 @@ async def account_with_config_limits(db_session: AsyncSession):
     db_session.add(saldo_inicial)
 
     limite = LimiteContaModel(
+        id_limite=random.randint(10000, 999999),
         id_conta=conta.id_conta,
         limite_diario=Decimal("10000.00"),
         limite_noturno=Decimal("600.00")
@@ -193,6 +204,7 @@ async def id_conta_origem(db_session: AsyncSession, valid_customer_data):
 
     uid = str(uuid.uuid4())[:5]
     conta = ContaModel(
+        id_conta=random.randint(10000, 999999),
         id_cliente=cliente.id_cliente,
         num_conta=f"000{uid}-1",
         agencia="0001",
@@ -202,6 +214,7 @@ async def id_conta_origem(db_session: AsyncSession, valid_customer_data):
     await db_session.flush()
 
     limite = LimiteContaModel(
+        id_limite=random.randint(10000, 999999),
         id_conta=conta.id_conta,
         limite_diario=Decimal("10000.00"),
         limite_noturno=Decimal("600.00")
@@ -209,6 +222,7 @@ async def id_conta_origem(db_session: AsyncSession, valid_customer_data):
     db_session.add(limite)
     
     saldo = SaldoContaModel(
+        id_saldo_conta=random.randint(10000, 999999),
         id_conta=conta.id_conta,
         saldo_disponivel=Decimal("100.00"),
         saldo_bloqueado=Decimal("0.00"),
@@ -238,6 +252,7 @@ async def id_conta_destino(db_session: AsyncSession):
     await db_session.flush()
 
     conta = ContaModel(
+        id_conta=random.randint(10000, 999999),
         id_cliente=cliente.id_cliente,
         num_conta=f"000{uid[:5]}-2",
         agencia="0001",
@@ -247,6 +262,7 @@ async def id_conta_destino(db_session: AsyncSession):
     await db_session.flush()
 
     limite = LimiteContaModel(
+        id_limite=random.randint(10000, 999999),
         id_conta=conta.id_conta,
         limite_diario=Decimal("10000.00"),
         limite_noturno=Decimal("600.00")
@@ -254,6 +270,7 @@ async def id_conta_destino(db_session: AsyncSession):
     db_session.add(limite)
     
     saldo = SaldoContaModel(
+        id_saldo_conta=random.randint(10000, 999999),
         id_conta=conta.id_conta,
         saldo_disponivel=Decimal("0.00"),
         saldo_bloqueado=Decimal("0.00"),
@@ -268,6 +285,7 @@ async def id_conta_destino(db_session: AsyncSession):
 @pytest_asyncio.fixture
 async def chave_pix_origem(db_session: AsyncSession, id_conta_origem):
     chave = ChavePixModel(
+        id_chave=random.randint(10000, 999999),
         id_conta=id_conta_origem,
         tipo_chave="EMAIL",
         valor_chave="origem@email.com"
@@ -280,6 +298,7 @@ async def chave_pix_origem(db_session: AsyncSession, id_conta_origem):
 @pytest_asyncio.fixture
 async def chave_pix_destino(db_session: AsyncSession, id_conta_destino):
     chave = ChavePixModel(
+        id_chave=random.randint(10000, 999999),
         id_conta=id_conta_destino,
         tipo_chave="EMAIL",
         valor_chave="destino@email.com"

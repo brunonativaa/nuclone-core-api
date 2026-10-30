@@ -21,6 +21,7 @@ async def setup_two_accounts_with_balance(db_session, valid_customer_data):
 
     # 2. Cria Conta Origem vinculada ao cliente 1
     source_account = await account_service.create_account(
+        id_conta=random.randint(10000, 999999),
         id_cliente=customer1.id_cliente,
         agencia="0001",
         tipo_conta="PF"

@@ -63,6 +63,7 @@ async def test_auth_repository_get_account_by_cliente_id(db_session):
 
     uid = str(uuid.uuid4())[:5]
     conta = ContaModel(
+        id_conta=random.randint(10000, 999999),
         id_cliente=cliente.id_cliente,
         num_conta=f"000{uid}-1",
         agencia="0001",
