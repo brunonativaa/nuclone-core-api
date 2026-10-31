@@ -1,5 +1,6 @@
 from unittest.mock import AsyncMock, patch
 import pytest
+from decimal import Decimal
 from fastapi import status
 
 from src.modules.pix.exceptions import (
@@ -17,9 +18,12 @@ async def test_transfer_pix_success(mock_pix_service, client):
     mock_pix_service.return_value = mock_service_instance
 
     mock_transaction = AsyncMock()
-    mock_transaction.id_transacao = 100
-    mock_service_instance.make_pix_payment.return_value = mock_transaction
-
+    mock_service_instance.make_pix_payment.return_value = {
+        "id_transacao": 100,
+        "valor": Decimal("50.0")
+    }
+    mock_pix_service.return_value = mock_service_instance
+   
     payload = {
         "id_conta_origem": 1,
         "chave_destino": "teste@pix.com",

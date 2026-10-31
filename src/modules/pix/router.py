@@ -30,7 +30,7 @@ async def transfer_pix(payload: PixTransferInput, db: AsyncSession = Depends(get
         )
         return PixTransferOutput(
             message="Transferência PIX realizada com sucesso!",
-            id_transacao=transaction.id_transacao,
+            id_transacao=transaction["id_transacao"],
             valor=payload.valor
         )
 

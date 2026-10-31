@@ -1,4 +1,5 @@
 import pytest
+import random
 from src.modules.account.schema import AccountCreateInput
 from src.modules.account.service import (
     ClienteNaoEncontradoException,
@@ -26,6 +27,7 @@ async def test_create_account_success(db_session, valid_customer_data):
     )
    
     account = await account_service.create_account(
+        id_conta=random.randint(10000, 999999),
         id_cliente=account_data.id_cliente,
         agencia=account_data.agencia,
         tipo_conta=account_data.tipo_conta,
@@ -48,6 +50,7 @@ async def test_get_initial_balance_zero(db_session, valid_customer_data):
         id_cliente=customer.id_cliente, tipo_conta="PF"
     )
     account = await account_service.create_account(
+        id_conta=random.randint(10000, 999999),
         id_cliente=account_input.id_cliente,
         agencia=account_input.agencia,
         tipo_conta=account_input.tipo_conta,
@@ -67,6 +70,7 @@ async def test_create_account_for_non_existing_customer_should_fail(db_session):
     with pytest.raises(ClienteNaoEncontradoException):
         # ✅ Passa o id_cliente como int
         await account_service.create_account(
+            id_conta=random.randint(10000, 999999),
             id_cliente=invalid_account_input.id_cliente,
             agencia=invalid_account_input.agencia,
             tipo_conta=invalid_account_input.tipo_conta,

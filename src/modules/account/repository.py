@@ -12,27 +12,40 @@ class ContaRepository:
     def __init__(self, db_session: AsyncSession):
         self.db = db_session
 
-    async def create_account(self, id_cliente: int, agencia: str, num_conta: str, tipo_conta: str = "PF") -> ContaModel:
-        conta = ContaModel(
-            id_cliente=id_cliente,
-            agencia=agencia,
-            num_conta=num_conta,
-            tipo_conta=tipo_conta
-        )
+    async def create_account(self, id_cliente: int, agencia: str, num_conta: str, tipo_conta: str = "PF", id_conta: Optional[int] = None) -> ContaModel:
+        account_data = {
+            "id_cliente": id_cliente,
+            "agencia": agencia,
+            "num_conta": num_conta,
+            "tipo_conta": tipo_conta
+    }
+    
+        # Se o ID foi passado explicitamente (ex: nos testes com SQLite), injeta no dicionário
+        if id_conta is not None:
+            account_data["id_conta"] = id_conta
+
+        conta = ContaModel(**account_data)
         self.db.add(conta)
         await self.db.flush()
         await self.db.refresh(conta)
         return conta
 
-    async def create_balance(self, id_conta: int, saldo_inicial: Decimal = Decimal("0.00")) -> SaldoContaModel:
-        saldo = SaldoContaModel(
-            id_conta=id_conta,
-            saldo_disponivel=saldo_inicial
-        )
+    async def create_balance(self, id_conta: int, saldo_inicial: Decimal = Decimal("0.00"), id_saldo_conta: Optional[int] = None) -> SaldoContaModel:
+        balance_data = {
+            "id_conta": id_conta,
+            "saldo_disponivel": saldo_inicial,
+            "saldo_bloqueado": Decimal("0.00"),
+        }
+    
+        # Se o ID foi passado explicitamente (para satisfazer o SQLite nos testes), injeta no dicionário
+        if id_saldo_conta is not None:
+            balance_data["id_saldo_conta"] = id_saldo_conta
+
+        saldo = SaldoContaModel(**balance_data)
         self.db.add(saldo)
         await self.db.flush()
+        await self.db.refresh(saldo)
         return saldo
-
 
     async def get_account_by_id(self, id_conta: int) -> Optional[ContaModel]:
         return await self.db.get(ContaModel, id_conta)

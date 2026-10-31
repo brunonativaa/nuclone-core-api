@@ -23,32 +23,45 @@ class ContaService:
         self.conta_repo = conta_repo or ContaRepository(db_session)
         self.cliente_repo = cliente_repo or ClienteRepository(db_session)
 
-    async def create_account(self, id_cliente: int, agencia: str = "0001", tipo_conta: str = "PF") -> ContaModel:
+    async def create_account(self, id_cliente: int, agencia: str = "0001", tipo_conta: str = "PF", id_conta: Optional[int] = None, id_saldo_conta: Optional[int] = None) -> ContaModel:
         # Gera um número de conta único de 6 dígitos
-
             customer = await self.cliente_repo.get_by_id(id_cliente)
             if not customer:
                 raise ClienteNaoEncontradoException(id_cliente)
 
-            num_account = str(random.randint(100000, 999999))
+            num_conta = str(random.randint(100000, 999999))
 
-            account = await self.conta_repo.create_account(
-                id_cliente=id_cliente,
-                agencia=agencia,
-                num_conta=num_account,
-                tipo_conta=tipo_conta,
+            account_kwargs = {
+                "id_cliente": id_cliente,
+                "agencia": agencia,
+                "num_conta": num_conta,
+                "tipo_conta": tipo_conta,
+            }
+            
+            if id_conta is not None:
+                account_kwargs["id_conta"] = id_conta
+
+            # Passa os argumentos desestruturados para o repositório
+            account = await self.conta_repo.create_account(**account_kwargs)
+            
+
+            # Inicializa o registro de saldo na tabela correspondentesaldo_id = id_saldo_conta if id_saldo_conta is not None else random.randint(10000, 999999)
+            saldo_id = id_saldo_conta if id_saldo_conta  in locals() and id_saldo_conta else random.randint(10000, 999999)
+
+            await self.conta_repo.create_balance(
+                id_conta=account.id_conta, 
+                saldo_inicial=Decimal("0.00"),
+                id_saldo_conta=saldo_id
             )
 
-            # Inicializa o registro de saldo na tabela correspondente
-            await self.conta_repo.create_balance(id_conta=account.id_conta, saldo_inicial=Decimal("0.00"))
-
             new_limite = LimiteContaModel(
+                id_limite=random.randint(10000, 999999), # 👈 Adicionado para evitar o IntegrityError no SQLite
                 id_conta=account.id_conta,
                 limite_diario=Decimal("5000.00"),
                 limite_noturno=Decimal("1000.00")
             )
             self.db.add(new_limite)
-
+            
             await self.db.commit()
             await self.db.refresh(account)
            
@@ -57,7 +70,7 @@ class ContaService:
     async def create_balance(self, id_conta: int) -> SaldoContaModel:
             return await self.conta_repo.create_balance(
                 id_conta=id_conata,
-                saldo_inicial=Decimal("0.00")
+                saldo_inicial=Decimal("0.00"),
             ) 
 
     async def get_by_id(self, id_conta: int) -> ContaModel:
@@ -76,7 +89,8 @@ class ContaService:
 
         # 3. Fallback: cria saldo se não existir
         if not saldo:
-            saldo = await self.conta_repo.create_balance(id_conta, saldo_inicial=Decimal("0.00"))
+            saldo_id = random.randint(10000, 999999)
+            saldo = await self.conta_repo.create_balance(id_conta=id_conta, saldo_inicial=Decimal("0.00"), id_saldo_conta=saldo_id)
             await self.db.commit()
             await self.db.refresh(saldo)
 

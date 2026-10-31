@@ -81,8 +81,8 @@ async def test_perform_pix_failure_bank_rollback(
     await conta_service.credit(id_conta_origem, Decimal("250.00"))
 
     mocker.patch.object(
-        service.pix_repo,
-        "record_transaction",
+        db_session,
+        "flush",
         side_effect=Exception("Erro forçado do banco"),
     )
 
@@ -125,7 +125,7 @@ async def test_successfully_complete_a_pix_transfer(
         valor=Decimal("50.00"),
     )
 
-    assert transacao.valor == Decimal("50.00")
+    assert transacao["valor"] == Decimal("50.00")
 
     conta_dto_origem = await conta_service.get_balance(id_conta_origem)
     saldo_origem = conta_dto_origem.saldo_disponivel

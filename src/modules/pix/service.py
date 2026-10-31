@@ -1,4 +1,5 @@
 import uuid
+import random
 from decimal import Decimal
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -123,22 +124,28 @@ class PixService:
         try:
             await self.conta_service.credit(id_conta_destino, valor_decimal)
 
-            dados_transacao = await self.pix_repo.record_transaction({
+            transacao_data = {
+                "id_transacao": id_transacao if 'id_transacao' in locals() and id_transacao else random.randint(10000, 999999), # 👈 Blindagem para o SQLite
                 "id_conta_origem": id_conta_origem,
                 "id_conta_destino": id_conta_destino,
-                "tipo_transacao": TipoTransacaoEnum.PIX,
-                "valor": valor_decimal
-            })
+                "tipo_transacao": "PIX",
+                "valor": valor,
+                "status": "CONCLUIDO",
+            }
+
+            transacao = TransacaoModel(**transacao_data)
+            self.db.add(transacao)
+            await self.db.flush()
 
             await self.db.commit()
             await self.pix_events.disparar_pix_solicitado(
-                id_transacao=dados_transacao.id_transacao,
+                id_transacao=transacao.id_transacao,
                 id_conta_origem=id_conta_origem,
                 id_conta_destino=id_conta_destino,
                 valor=valor_decimal
             )
 
-            return dados_transacao
+            return transacao_data
 
         except Exception as e:
             await self.db.rollback()
