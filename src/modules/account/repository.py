@@ -37,6 +37,11 @@ class ContaRepository:
     async def get_account_by_id(self, id_conta: int) -> Optional[ContaModel]:
         return await self.db.get(ContaModel, id_conta)
 
+    async def get_account_by_customer_id(self, id_cliente: int) -> Optional[ContaModel]:
+        stmt = select(ContaModel).where(ContaModel.id_cliente == id_cliente)
+        result = await self.db.execute(stmt)
+        return result.scalars().first()
+
     async def get_balance(self, id_conta: int) -> Optional[SaldoContaModel]:
         stmt = select(SaldoContaModel).where(SaldoContaModel.id_conta == id_conta)     
         return await self.db.scalar(stmt)
