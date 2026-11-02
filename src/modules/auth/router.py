@@ -38,7 +38,7 @@ async def login(
         )
 
     # 3. Emissão do token JWT com o identificador do cliente no payload
-    access_token = create_access_token(data={"sub": str(cliente.cpf)})
+    access_token = create_access_token(data={"sub": str(cliente.id_cliente)})
 
     return {
         "access_token": access_token,

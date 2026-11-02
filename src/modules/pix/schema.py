@@ -41,6 +41,9 @@ class PixTransferInput(BaseDTO):
     id_conta_destino: Optional[int] = Field(
         default=None, gt=0, description="ID da conta de destino (opcional)"
     )
+    tipo_chave: Optional[Literal["CPF", "EMAIL", "TELEFONE", "ALEATORIA"]] = Field(
+        default=None, description="Tipo da chave Pix do destinatário (opcional)"
+    )
     chave_destino: Optional[str] = Field(
         default=None, description="Chave Pix do destinatário (opcional)"
     )

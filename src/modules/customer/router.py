@@ -29,7 +29,7 @@ async def create_customer(cliente: ClienteCreateInput, db: AsyncSession = Depend
             },
         )
 
-@router.get("/{id_cliente}", status_code=status.HTTP_200_OK)
+@router.get("/{id_cliente}", response_model=ClienteResponse, status_code=status.HTTP_200_OK)
 async def get_customer_by_id(id_cliente: int, db: AsyncSession = Depends(get_db)):
     service = ClienteService(db)
     try:

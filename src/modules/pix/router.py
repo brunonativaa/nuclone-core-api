@@ -14,12 +14,51 @@ from src.modules.pix.schema import (
     PixTransferInput,
     PixTransferOutput,
     PixKeyCreateInput,
+    PixCreatedResponse
 )
 
 router = APIRouter(tags=["Pix Transactions"])
 
 
-@router.post("/transfer", status_code=status.HTTP_200_OK, response_model=PixTransferOutput)
+@router.post("/keys", response_model=PixCreatedResponse, status_code=status.HTTP_201_CREATED)
+async def create_pix_key(payload: PixKeyCreateInput, db: AsyncSession = Depends(get_db)):
+    service = PixService(db)
+
+    try:
+        new_key = await service.register_pix_key(
+            id_conta=payload.id_conta,
+            tipo_chave=payload.tipo_chave,
+            valor_chave=payload.valor_chave
+        )
+
+        return {
+            "message": "Chave Pix Cadastrada com sucesso!",
+            "id_chave": new_key.id_chave,
+            "tipo_chave": new_key.tipo_chave,
+            "valor_chave": new_key.valor_chave
+        }
+    
+    except ChavePixDuplicadaException as e:
+        # 409 Conflict: O recurso que você tentou criar já existe
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+    except ContaNaoEncontradaException as e:
+        # 404 Not Found
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except ValidaChavePixException as e:
+        # 400 Bad Request
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.post("/transfer", response_model=PixTransferOutput,  status_code=status.HTTP_200_OK, )
 async def transfer_pix(payload: PixTransferInput, db: AsyncSession = Depends(get_db)):
     service = PixService(db)
     try:
@@ -56,38 +95,3 @@ async def transfer_pix(payload: PixTransferInput, db: AsyncSession = Depends(get
         )
 
 
-@router.post("/keys", status_code=status.HTTP_201_CREATED)
-async def create_pix_key(payload: PixKeyCreateInput, db: AsyncSession = Depends(get_db)):
-    service = PixService(db)
-
-    try:
-        new_key = await service.register_pix_key(
-            id_conta=payload.id_conta,
-            key_type=payload.tipo_chave,
-            valor_chave=payload.valor_chave
-        )
-
-        return {
-            "message": "Chave Pix Cadastrada com sucesso!",
-            "id_chave": new_key.id_chave,
-            "valor_chave": new_key.valor_chave
-        }
-    
-    except ChavePixDuplicadaException as e:
-        # 409 Conflict: O recurso que você tentou criar já existe
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(e)
-        )
-    except ContaNaoEncontradaException as e:
-        # 404 Not Found
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except ValidaChavePixException as e:
-        # 400 Bad Request
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )

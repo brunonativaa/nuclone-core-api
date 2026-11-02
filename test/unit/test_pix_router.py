@@ -104,6 +104,7 @@ async def test_create_pix_key_success(mock_pix_service, client):
 
     mock_key = AsyncMock()
     mock_key.id_chave = 10
+    mock_key.tipo_chave = "EMAIL"
     mock_key.valor_chave = "cliente@nuclone.com"
     mock_service_instance.register_pix_key.return_value = mock_key
 
