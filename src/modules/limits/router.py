@@ -27,7 +27,7 @@ async def consultar_limites_pix(
 ):
     # 1. Busca a conta vinculada ao cliente logado
     conta_repo = ContaRepository(db)
-    conta = await conta_repo.get_account_by_id(cliente.id_cliente)
+    conta = await conta_repo.get_account_by_customer_id(cliente.id_cliente)
     if not conta:
         raise HTTPException(status_code=404, detail="Conta não encontrada para este cliente.")
 
@@ -43,7 +43,7 @@ async def alterar_limites_pix(
     db: AsyncSession = Depends(get_db)
 ):
     conta_repo = ContaRepository(db)
-    conta = await conta_repo.get_account_by_id(cliente.id_cliente)
+    conta = await conta_repo.get_account_by_customer_id(cliente.id_cliente)
     if not conta:
         raise HTTPException(status_code=404, detail="Conta não encontrada para este cliente.")
 

@@ -44,5 +44,7 @@ class ClienteResponse(BaseDTO):
     nome: str = Field(..., description="Nome do cliente")
     cpf: str = Field(...,
                      description="CPF sem pontos ou traços(apenas 11 digitos)")
+    sexo: Optional[str] = Field(None, description="Sexo do cliente (M/F)")
     email: EmailStr = Field(..., description="E-mail válido do cliente")
+    data_nascimento: date = Field(..., description="Data de nascimento formato YYYY-MM-DD")
 

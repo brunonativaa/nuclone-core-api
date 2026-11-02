@@ -54,7 +54,7 @@ async def create_account(
 
 
 @router.get(
-    "/{id_conta}", 
+    "/{id_conta}", response_model=AccountOutput, 
     status_code=status.HTTP_200_OK
 )
 async def get_account_by_id(
