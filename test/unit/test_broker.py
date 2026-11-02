@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.core.broker import RabbitMQBroker
+from src.core.broker import broker
 
 
 @pytest.mark.asyncio
@@ -25,7 +25,6 @@ async def test_publish_event_success():
     with patch("aio_pika.connect_robust", new_callable=AsyncMock) as mock_connect:
         mock_connect.return_value = mock_connection
 
-        broker = RabbitMQBroker()
 
         payload = {
             "event_id": "uuid-teste",

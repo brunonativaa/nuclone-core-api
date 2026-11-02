@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from src.core.broker import broker
 
 
 from src.core.database import Base, engine
@@ -23,9 +24,30 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     print("Banco de dados inicializado com sucesso!")
-    yield  # A aplicação roda aqui
+   
+    try:
+        await broker.declare_topology(
+            exchange_name="nuclone.pix.exchange",
+            queue_name="pix.processing.queue",
+            routing_key="pix.solicitado"
+        )
+        
+        print("Topologia do RabbitMQ declarada e vinculada com sucesso!")
+    
+    except Exception as e:
+        # Em produção, tratamos falhas de infraestrutura para que o app suba ou falhe de forma controlada
+        print(f"[AVISO CRÍTICO] Não foi possível conectar ao RabbitMQ no boot: {e}")
+        # Dependendo da criticidade, você pode optar por relançar o erro (raise e) se o mensageiro for obrigatório
+
+    yield  # --- A aplicação roda aqui atendendo requisições ---
+
+    # --- 3. Shutdown: Encerra conexões ativas com segurança ---
     print("Encerrando serviços com segurança...")
-    # --- Shutdown: Encerra conexões ativas do pool na finalização ---
+
+    if broker._connection and not broker._connection.is_closed:
+        await broker._connection.close()
+        print("Conexão com o RabbitMQ encerrada.")
+
     await engine.dispose()
 
 app = FastAPI(

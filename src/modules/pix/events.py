@@ -1,7 +1,7 @@
 import uuid
 from decimal import Decimal
 from typing import Dict, Any
-from src.core.broker import RabbitMQBroker
+from src.core.broker import broker
 
 
 class PixEventOperations:
@@ -22,7 +22,6 @@ class PixEventOperations:
             "status": "PROCESSANDO"
         }
 
-        broker = RabbitMQBroker()
 
         await broker.publish_event(
             exchange_name="nuclone.pix.exchange",
