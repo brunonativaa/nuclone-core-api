@@ -1,3 +1,7 @@
+networks:
+  nuclone-net:
+    driver: bridge
+
 services:
   database:
     image: postgres:15
@@ -20,6 +24,23 @@ services:
     volumes:
       - ./database/sql/init:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nuclone-net
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: nuclone_rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - nuclone-net
 
   api:
     build: .
@@ -34,19 +55,25 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    networks:
+      - nuclone-net
 
-  rabbitmq:
-    image: rabbitmq:3.13-management
-    container_name: nuclone_rabbitmq
-    restart: always
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+  worker:
+    build: .
+    container_name: nuclone-worker
+    env_file:
+      - .env
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - .:/app
+    command: poetry run python src/workers/worker_liquidacao.py
+    environment:
+     - RABBITMQ_URL=amqp://guest:guest@nuclone_rabbitmq:5672/
+    depends_on:
+      - rabbitmq
+      - database
+
 
 volumes:
   postgres_data:
